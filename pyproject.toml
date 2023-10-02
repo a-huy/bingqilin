@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "bingqilin"
+version = "0.1.0"
+description = "A collection of utilities for building APIs with FastAPI"
+authors = ["Andy <andy@ahn.io>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.103.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
