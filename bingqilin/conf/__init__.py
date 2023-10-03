@@ -44,7 +44,7 @@ class Config:
     def _get_from_config(
         self,
         path_parts: list,
-        conf_child: Sequence | Mapping,
+        conf_child: list | dict,
         default=None,
         create_if_missing_key: bool = False,
     ):
@@ -67,10 +67,12 @@ class Config:
         if not path_parts:  # Base case
             if is_sequence_get:
                 return conf_child[part] if len(conf_child) > part else default
-            else:
+            elif isinstance(conf_child, dict):
                 if create_if_missing_key:
                     conf_child[part] = {}
                 return conf_child.get(part, default)
+            else:
+                raise TypeError(f'Object is not a list or a dict: {conf_child} ({type(conf_child)})')
 
         if (
             isinstance(conf_child, Mapping)
