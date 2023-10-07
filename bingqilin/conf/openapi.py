@@ -1,4 +1,7 @@
+from typing import Type
+
 from fastapi import FastAPI
+from fastapi.openapi.constants import REF_TEMPLATE
 from fastapi.openapi.utils import get_openapi
 
 from bingqilin.conf import CONFIG, ConfigModel
@@ -6,6 +9,17 @@ from bingqilin.logger import bq_logger
 
 
 logger = bq_logger.getChild("conf.routes")
+
+
+def get_flat_config_model_schema(config_model: Type[ConfigModel]):
+    json_schema = config_model.model_json_schema(ref_template=REF_TEMPLATE)
+    defs_key = "$defs"
+    if defs_key not in json_schema:
+        return {config_model.__name__: json_schema}
+
+    defs = json_schema.pop(defs_key)
+    defs[config_model.__name__] = json_schema
+    return defs
 
 
 def add_config_model_to_openapi(fastapi_app: FastAPI):
@@ -38,9 +52,9 @@ def add_config_model_to_openapi(fastapi_app: FastAPI):
         )
         openapi_schema.setdefault("components", {})
         openapi_schema["components"].setdefault("schemas", {})
-        openapi_schema["components"]["schemas"][
-            config_model.__name__
-        ] = config_model.model_json_schema()
+        openapi_schema["components"]["schemas"].update(
+            get_flat_config_model_schema(config_model)
+        )
         fastapi_app.openapi_schema = openapi_schema
         return fastapi_app.openapi_schema
 
