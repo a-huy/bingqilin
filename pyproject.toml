@@ -22,6 +22,7 @@ config = ["python-dotenv", "pyyaml"]
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
+ipython = "^8.16.1"
 
 [build-system]
 requires = ["poetry-core"]
