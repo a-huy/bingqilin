@@ -52,9 +52,18 @@ def add_config_model_to_openapi(fastapi_app: FastAPI):
         )
         openapi_schema.setdefault("components", {})
         openapi_schema["components"].setdefault("schemas", {})
-        openapi_schema["components"]["schemas"].update(
-            get_flat_config_model_schema(config_model)
-        )
+
+        if CONFIG.flatten_config_schema:
+            openapi_schema["components"]["schemas"].update(
+                get_flat_config_model_schema(config_model)
+            )
+        else:
+            openapi_schema["components"]["schemas"][
+                config_model.__name__
+            ] = config_model.model_json_schema(
+                ref_template=f"#/components/schemas/{config_model.__name__}/$defs/"
+                + "{model}"
+            )
         fastapi_app.openapi_schema = openapi_schema
         return fastapi_app.openapi_schema
 

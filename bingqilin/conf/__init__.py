@@ -1,13 +1,13 @@
 import os
 
 from collections.abc import Sequence, Mapping
-from typing import Any, Type, Optional, List
+from typing import Any, Type, Optional
 
-from pydantic import BaseModel, Field
 
 from bingqilin.logger import bq_logger
 
 from .loaders import ConfigLoader, AVAILABLE_CONFIG_LOADERS, LOADERS_BY_FILE_TYPES
+from .models import ConfigModel
 
 
 logger = bq_logger.getChild("conf")
@@ -17,25 +17,6 @@ ENV_PATH_DELIMITER = "__"
 
 class ConfigError(Exception):
     pass
-
-
-class ConfigModel(BaseModel):
-    """
-    This is the default config model. If no additional config values are defined, then these
-    are defaults that are validated.
-    """
-
-    debug: bool = Field(
-        default=True, description="Toggles debug features (do not use in production!)"
-    )
-    additional_config_files: List[str] = Field(
-        default=[],
-        description="Additional config files to load after the initial load (via an .env file or config.yaml)",
-    )
-    add_config_model_schema: Optional[bool] = Field(
-        default=True,
-        description="Add the loaded config model schema to the OpenAPI spec as well as the docs",
-    )
 
 
 class Config:
