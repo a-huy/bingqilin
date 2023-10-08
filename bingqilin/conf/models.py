@@ -1,5 +1,5 @@
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field, AnyUrl, EmailStr
+from pydantic import BaseModel, Field, AnyUrl
 
 
 class FastAPILicenseInfo(BaseModel):

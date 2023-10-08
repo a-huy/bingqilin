@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.openapi.constants import REF_TEMPLATE
 from fastapi.openapi.utils import get_openapi
 
-from bingqilin.conf import CONFIG, ConfigModel
+from bingqilin.conf import config, ConfigModel
 from bingqilin.logger import bq_logger
 
 
@@ -23,13 +23,13 @@ def get_flat_config_model_schema(config_model: Type[ConfigModel]):
 
 
 def add_config_model_to_openapi(fastapi_app: FastAPI):
-    if not (CONFIG.is_loaded):
+    if not (config.is_loaded):
         logger.warning(
-            "Attempting to modify the app's OpenAPI with the config model before CONFIG is loaded."
+            "Attempting to modify the app's OpenAPI with the config model before config is loaded."
         )
         return
 
-    config_model = CONFIG.model or ConfigModel
+    config_model = config.model or ConfigModel
 
     def openapi_with_config_schema():
         if fastapi_app.openapi_schema:
@@ -53,7 +53,7 @@ def add_config_model_to_openapi(fastapi_app: FastAPI):
         openapi_schema.setdefault("components", {})
         openapi_schema["components"].setdefault("schemas", {})
 
-        if CONFIG.flatten_config_schema:
+        if config.data.flatten_config_schema:
             openapi_schema["components"]["schemas"].update(
                 get_flat_config_model_schema(config_model)
             )
