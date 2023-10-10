@@ -5,6 +5,7 @@ from fastapi.openapi.constants import REF_TEMPLATE
 from fastapi.openapi.utils import get_openapi
 
 from bingqilin.conf import config, ConfigModel
+from bingqilin.db import inject_database_config_models_openapi
 from bingqilin.logger import bq_logger
 
 
@@ -64,6 +65,10 @@ def add_config_model_to_openapi(fastapi_app: FastAPI):
                 ref_template=f"#/components/schemas/{config_model.__name__}/$defs/"
                 + "{model}"
             )
+
+        if config.data.databases:
+            inject_database_config_models_openapi(openapi_schema, config)
+
         fastapi_app.openapi_schema = openapi_schema
         return fastapi_app.openapi_schema
 

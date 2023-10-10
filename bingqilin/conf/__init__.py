@@ -62,7 +62,7 @@ def load_config_files(config_files):
             normalized_suffix = suffix.lstrip(".")
             if normalized_suffix in LOADERS_BY_FILE_TYPES:
                 loader: Type[ConfigLoader] = LOADERS_BY_FILE_TYPES[normalized_suffix]
-                loader.check()
+                loader.check_dependencies()
                 return loader.load(cf)
 
     configs = []
@@ -81,7 +81,6 @@ def update(config_files):
         logger.warning("Could not read any specified config files.")
         return
 
-    global config
     config.merge(new_configs)
 
 
@@ -104,7 +103,6 @@ def initialize_config(
     if not model:
         model = ConfigModel
 
-    global config
     config.set_model(model)
     config.merge(configs)
 
@@ -121,7 +119,6 @@ def load_from_string(config_string, loader_type) -> Config:
 
     config_dict = AVAILABLE_CONFIG_LOADERS[loader_type].load_from_string(config_string)
 
-    global config
     config.merge(config_dict)
     return config
 

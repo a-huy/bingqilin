@@ -1,5 +1,8 @@
-from typing import Optional, List, Any
-from pydantic import BaseModel, Field, AnyUrl
+from typing import Optional, List, Any, Union
+from pydantic import BaseModel, Field, AnyUrl, validator
+
+from bingqilin.db import validate_databases
+from bingqilin.db.models import DBDict
 
 
 class FastAPILicenseInfo(BaseModel):
@@ -148,4 +151,16 @@ class ConfigModel(BaseModel):
         "in the schema for the config model.",
     )
 
+    # The `Any` type will be replaced with the injected schema of all registered database config models
+    databases: DBDict[str, Union[dict, Any]] = Field(  # type: ignore
+        default={},
+        description="Configuration for database connections. "
+        "Each database is mapped by a string name to a DBConfig (or subclass) instance or a dict. "
+        "If the config is an instance of DBConfig, then an attempt is made to initialize the client.",
+    )
+
     fastapi: FastAPIConfig = FastAPIConfig()
+
+    @validator("databases")
+    def validate_databases(cls, databases):
+        return validate_databases(databases)

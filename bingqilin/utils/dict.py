@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Mapping, MutableMapping, MutableSequence, Literal
 
 
-DEFAULT_PATH_DELIMITER = "."
+DEFAULT_PATH_DELIMITER = "/"
 
 
 class SEQUENCE_MERGE_STRATEGY(Enum):
@@ -97,7 +97,7 @@ def merge(
     Args:
         base (dict): A base dict to merge values into
         path_delimiter (str, optional): A delimiter to describe the keys to access a value in a nested dict.
-            Defaults to ".". Can be changed in case there are keys that contain a ".".
+            Defaults to "/". Can be changed in case there are keys that contain a "/".
         create_parent_dicts (bool, optional): If the key doesn't exist in the base dict and is supposed to contain
             a nested dict, create one. Disable this option if you want to enforce that the merging dict is
             a strict subset. Defaults to True.

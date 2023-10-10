@@ -10,7 +10,7 @@ def config_loader(cls):
     AVAILABLE_CONFIG_LOADERS[cls.loader_type] = cls
     if cls.filetypes:
         for ft in cls.filetypes:
-            LOADERS_BY_FILE_TYPES[ft.lstrip('.')] = cls
+            LOADERS_BY_FILE_TYPES[ft.lstrip(".")] = cls
 
     @wraps(cls)
     def wrapper(*args, **kwargs):
@@ -21,20 +21,20 @@ def config_loader(cls):
 
 class LoaderRequiresPackageInstalledError(Exception):
     def __init__(
-        self, *args: object, loader_name: str = '', package_deps: str = ''
+        self, *args: object, loader_name: str = "", package_deps: str = ""
     ) -> None:
         super().__init__(*args)
         self.loader_name = loader_name
         self.package_deps = package_deps
 
     def __repr__(self) -> str:
-        deps_string = ', '.join(self.package_deps)
+        deps_string = ", ".join(self.package_deps)
         return f'Loader "{self.loader_name}" requires package(s) "{deps_string}" to be installed.'
 
 
 class ConfigLoader(object):
     loader_type = None
-    package_deps = ['pyyaml']
+    package_deps = ["pyyaml"]
     imported_pkg = None
 
     @classmethod
@@ -42,7 +42,7 @@ class ConfigLoader(object):
         raise NotImplementedError()
 
     @classmethod
-    def check(cls):
+    def check_dependencies(cls):
         try:
             cls.set_import()
         except ImportError:
@@ -59,9 +59,9 @@ class ConfigLoader(object):
 
 @config_loader
 class YAMLConfigLoader(ConfigLoader):
-    loader_type = 'yaml'
-    filetypes = ['.yml', '.yaml']
-    package_deps = ['pyyaml']
+    loader_type = "yaml"
+    filetypes = [".yml", ".yaml"]
+    package_deps = ["pyyaml"]
 
     @classmethod
     def set_import(cls):
@@ -71,7 +71,7 @@ class YAMLConfigLoader(ConfigLoader):
 
     @classmethod
     def load(cls, file_name):
-        with open(file_name, 'r') as yaml_file:
+        with open(file_name, "r") as yaml_file:
             config = cls.imported_pkg.safe_load(yaml_file)
 
         return config
@@ -83,11 +83,11 @@ class YAMLConfigLoader(ConfigLoader):
 
 @config_loader
 class DotenvConfigLoader(ConfigLoader):
-    loader_type = 'dotenv'
-    filetypes = ['.env']
-    package_deps = ['dotenv']
+    loader_type = "dotenv"
+    filetypes = [".env"]
+    package_deps = ["dotenv"]
 
-    path_delimiter = '__'
+    path_delimiter = "__"
 
     @classmethod
     def set_import(cls):
