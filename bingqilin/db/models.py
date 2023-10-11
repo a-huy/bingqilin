@@ -1,8 +1,19 @@
 from abc import abstractmethod
-from typing import Any, Optional, Literal, Mapping, Union, Sequence, Callable, Dict
+from functools import reduce
+from typing import (
+    Any,
+    Optional,
+    Literal,
+    Mapping,
+    Union,
+    Sequence,
+    Callable,
+    Dict,
+    List,
+)
 from typing_extensions import get_args
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, Field
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic._internal._generics import PydanticGenericMetadata
 from pydantic_core import core_schema
@@ -12,6 +23,16 @@ DATABASE_CONFIG_MODELS = {}
 
 
 class DBConfigMeta(ModelMetaclass):
+    @classmethod
+    def derives_from_db_config(cls, bases) -> bool:
+        for b in bases:
+            if b is DBConfig:
+                return True
+            else:
+                return cls.derives_from_db_config(b.__mro__)
+        else:
+            return False
+
     def __new__(
         mcs,
         cls_name: str,
@@ -30,7 +51,9 @@ class DBConfigMeta(ModelMetaclass):
             __pydantic_reset_parent_namespace__,
             **kwargs,
         )
-        if cls_name != "DBConfig" and DBConfig in bases:
+
+        all_bases = reduce(lambda x, y: x | y, [set(b.__mro__) for b in bases])
+        if cls_name != "DBConfig" and DBConfig in all_bases:
             DATABASE_CONFIG_MODELS[cls.get_model_db_type()] = cls  # type: ignore
         return cls
 
@@ -80,11 +103,23 @@ class DBConfig(BaseModel, metaclass=DBConfigMeta):
     def initialize_client(self):
         return
 
+    @property
+    def extra_fields(self) -> set[str]:
+        return set(self.__dict__) - set(self.__fields__)
+
+    @property
+    def extra_data(self) -> Dict[str, Any]:
+        print(self.extra_fields)
+        return {f: getattr(self, f) for f in self.extra_fields}
+
     @classmethod
     def get_model_db_type(cls):
         schema = cls.model_json_schema()
         properties = schema["properties"]
         return properties["type"]["const"]
+
+    class Config:
+        extra = "allow"
 
 
 class SQLAlchemyDBConfig(DBConfig):
@@ -101,7 +136,8 @@ class SQLAlchemyDBConfig(DBConfig):
     def check_required(self):
         if not (self.url or self.engine):
             raise ValueError(
-                "Information to specify a database is missing. Either a URI or (engine) must be specified."
+                "Information to specify a database is missing. Either a URI or (engine) "
+                "must be specified."
             )
         return self
 
@@ -124,3 +160,44 @@ class SQLAlchemyDBConfig(DBConfig):
         from .sqlalchemy import SQLAlchemyClient
 
         return SQLAlchemyClient(self)
+
+
+class RedisClusterNodeConfig(BaseModel):
+    host: str
+    port: Union[str, int]
+    server_type: Optional[Union[Literal["primary"], Literal["replica"]]] = None
+
+
+class RedisDBConfig(DBConfig):
+    type: Literal["redis"]
+
+    # Usual Redis fields used for connecting
+    port: int = 6379
+    db: int = 0
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+    # Less common options
+    unix_socket_path: Optional[str] = None
+    ssl: bool = False
+    ssl_keyfile: Optional[str] = None
+    ssl_certfile: Optional[str] = None
+    ssl_cert_reqs: str = "required"
+    ssl_ca_certs: Optional[str] = None
+    ssl_ca_data: Optional[str] = None
+    ssl_check_hostname: bool = False
+    socket_connect_timeout: Optional[int] = None
+
+    is_async: bool = Field(
+        default=True,
+        description="If set, this will use the Redis/RedisCluster connection clients "
+        "from `redis.asyncio`.",
+    )
+
+    # If not empty, this will return a RedisCluster object.
+    nodes: Optional[List[RedisClusterNodeConfig]] = None
+
+    def initialize_client(self):
+        from .redis import make_redis_client
+
+        return make_redis_client(self)

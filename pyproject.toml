@@ -24,6 +24,7 @@ config = ["python-dotenv", "pyyaml"]
 uvicorn = "^0.23.2"
 ipython = "^8.16.1"
 sqlalchemy = "^2.0.21"
+redis = {extras = ["hiredis"], version = "^5.0.1"}
 
 [build-system]
 requires = ["poetry-core"]

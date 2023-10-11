@@ -38,15 +38,17 @@ def validate_databases(databases):
 
 
 def _inject_db_conf_schemas(schema, config):
-    schema.update(
-        {
-            m.__name__: m.model_json_schema(
-                ref_template=f"#/components/schemas/{config.model.__name__}/$defs/"
-                + "{model}"
-            )
-            for m in DATABASE_CONFIG_MODELS.values()
-        }
-    )
+    config_defs_dict = {}
+    for model in DATABASE_CONFIG_MODELS.values():
+        model_schema = model.model_json_schema(
+            ref_template=f"#/components/schemas/{config.model.__name__}/$defs/"
+            + "{model}"
+        )
+        if sub_defs := model_schema.pop("$defs", None):
+            for sub_name, sub_schema in sub_defs.items():
+                config_defs_dict[sub_name] = sub_schema
+        config_defs_dict[model.__name__] = model_schema
+    schema.update(config_defs_dict)
 
 
 def _inject_dbs_property_refs(schema, config):
