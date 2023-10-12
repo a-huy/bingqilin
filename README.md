@@ -2,7 +2,13 @@
     <em>A collection of utilities that serve as syntactic ice cream for your FastAPI app</em>
 </p>
 
-<img src="https://badge.fury.io/py/bingqilin.svg" alt="Package version"> <img src="https://img.shields.io/pypi/pyversions/bingqilin.svg"> <img src="https://img.shields.io/github/license/a-huy/bingqilin.svg">
+<p align="center">
+<a href="https://pypi.org/project/bingqilin" target="_blank">
+    <img src="https://badge.fury.io/py/bingqilin.svg" alt="Package version">
+</a>
+<img src="https://img.shields.io/pypi/pyversions/bingqilin.svg">
+<img src="https://img.shields.io/github/license/a-huy/bingqilin.svg">
+</p>
 
 ---
 
