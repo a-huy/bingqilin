@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from bingqilin.conf import ConfigModel, initialize_config, config
 from bingqilin.conf.openapi import add_config_model_to_openapi
 from bingqilin.db import initialize_databases
+from bingqilin.handlers import add_log_validation_exception_handler
 
 
 def initialize(
@@ -29,10 +30,13 @@ def initialize(
         app_init_kwargs.update(**fastapi_kwargs)
         fastapi_app = FastAPI(**app_init_kwargs)
 
-    if db_config := config.data.databases:
-        initialize_databases(db_config)
+    initialize_databases()
 
-    if fastapi_app and config.data.add_config_model_schema:
-        add_config_model_to_openapi(fastapi_app)
+    if fastapi_app:
+        if config.data.add_config_model_schema:
+            add_config_model_to_openapi(fastapi_app)
+
+        if config.data.log_validation_errors:
+            add_log_validation_exception_handler(fastapi_app)
 
     return fastapi_app

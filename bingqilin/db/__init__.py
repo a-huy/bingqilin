@@ -11,7 +11,16 @@ DATABASE_CLIENTS = {}
 DEFAULT_CLIENT_NAME = "default"
 
 
-def initialize_databases(db_config):
+def initialize_databases(db_config=None):
+    if not db_config:
+        from bingqilin.conf import config
+
+        db_config = config.data.databases
+
+    if not db_config:
+        logger.debug("No databases config found.")
+        return
+
     for client_name, db_conf in db_config.items():
         if not isinstance(db_conf, DBConfig):
             logger.warning(

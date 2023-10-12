@@ -8,8 +8,9 @@ from bingqilin.db.models import DBDict
 class FastAPILicenseInfo(BaseModel):
     name: str = Field(description="The license name used for the API.")
     identifier: str = Field(
-        description="An [SPDX](https://spdx.github.io/spdx-spec/latest/) license expression for the API. "
-        "The `identifier` field is mutually exclusive of the `url` field."
+        description="An [SPDX](https://spdx.github.io/spdx-spec/latest/) license "
+        "expression for the API. The `identifier` field is mutually exclusive of the "
+        "`url` field."
     )
     url: AnyUrl = Field(
         description="A URL to the license used forf the API. MUST be in the format of a URL."
@@ -138,25 +139,35 @@ class ConfigModel(BaseModel):
     )
     additional_config_files: List[str] = Field(
         default=[],
-        description="Additional config files to load after the initial load (via an .env file or config.yaml)",
+        description="Additional config files to load after the initial load "
+        "(via an .env file or config.yaml)",
     )
     add_config_model_schema: bool = Field(
         default=True,
-        description="Add the loaded config model schema to the OpenAPI spec as well as the docs",
+        description="Add the loaded config model schema to the OpenAPI spec as well as the docs.",
     )
     flatten_config_schema: bool = Field(
         default=False,
-        description="Flattens all embedded models inside the config model so that they get listed as a "
-        "top-level schema on the docs page. Otherwise, they will show up as a list under the $defs field "
-        "in the schema for the config model.",
+        description="Flattens all embedded models inside the config model so that they "
+        "get listed as a top-level schema on the docs page. Otherwise, they will show up "
+        "as a list under the $defs field in the schema for the config model.",
+    )
+    log_validation_errors: bool = Field(
+        default=False,
+        description="Adds a `RequestValidationError` exception handler "
+        "that logs the invalid request and its validation errors. Useful for troubleshooting "
+        "routes that support a lot of different types of requests, such as third-party "
+        "callback handlers.",
     )
 
-    # The `Any` type will be replaced with the injected schema of all registered database config models
+    # The `Any` type will be replaced with the injected schema of all registered database
+    # config models
     databases: DBDict[str, Union[dict, Any]] = Field(  # type: ignore
-        default={},
+        default=DBDict(),
         description="Configuration for database connections. "
-        "Each database is mapped by a string name to a DBConfig (or subclass) instance or a dict. "
-        "If the config is an instance of DBConfig, then an attempt is made to initialize the client.",
+        "Each database is mapped by a string name to a DBConfig (or subclass) instance "
+        "or a dict. If the config is an instance of DBConfig, then an attempt is made to "
+        "initialize the client.",
     )
 
     fastapi: FastAPIConfig = FastAPIConfig()
