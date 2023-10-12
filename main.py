@@ -1,5 +1,3 @@
-from fastapi import FastAPI
-
 from bingqilin import initialize
 
 

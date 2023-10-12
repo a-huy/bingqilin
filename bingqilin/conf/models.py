@@ -140,7 +140,7 @@ class ConfigModel(BaseModel):
     additional_config_files: List[str] = Field(
         default=[],
         description="Additional config files to load after the initial load "
-        "(via an .env file or config.yaml)",
+        "(via an .env file or config.yml)",
     )
     add_config_model_schema: bool = Field(
         default=True,

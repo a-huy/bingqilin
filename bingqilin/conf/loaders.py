@@ -1,5 +1,6 @@
 from functools import wraps
 from io import StringIO
+from typing import List, Optional
 
 
 AVAILABLE_CONFIG_LOADERS = {}
@@ -21,20 +22,22 @@ def config_loader(cls):
 
 class LoaderRequiresPackageInstalledError(Exception):
     def __init__(
-        self, *args: object, loader_name: str = "", package_deps: str = ""
+        self,
+        *args: object,
+        loader_name: str = "",
+        package_deps: Optional[List[str]] = None,
     ) -> None:
-        super().__init__(*args)
         self.loader_name = loader_name
-        self.package_deps = package_deps
-
-    def __repr__(self) -> str:
+        self.package_deps = package_deps or []
         deps_string = ", ".join(self.package_deps)
-        return f'Loader "{self.loader_name}" requires package(s) "{deps_string}" to be installed.'
+        self.message = f'Loader "{loader_name}" requires package(s) "{deps_string}" to be installed.'
+        super().__init__(self.message)
 
 
 class ConfigLoader(object):
     loader_type = None
-    package_deps = ["pyyaml"]
+    filetypes = []
+    package_deps = []
     imported_pkg = None
 
     @classmethod
@@ -45,7 +48,7 @@ class ConfigLoader(object):
     def check_dependencies(cls):
         try:
             cls.set_import()
-        except ImportError:
+        except (ModuleNotFoundError, ImportError):
             raise LoaderRequiresPackageInstalledError(cls.loader_type, cls.package_deps)
 
     @classmethod
