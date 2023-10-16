@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Mapping, MutableMapping, MutableSequence, Literal
+from typing import Mapping, MutableMapping, MutableSequence, Any, List, Dict
 
 
 DEFAULT_PATH_DELIMITER = "/"
@@ -77,8 +77,8 @@ def set_key_path(
 
 
 def merge(
-    base: dict,
-    *dicts: list[dict],
+    base: Dict[str, Any],
+    *dicts: Dict[str, Any],
     path_delimiter: str = DEFAULT_PATH_DELIMITER,
     create_parent_dicts: bool = True,
     sequence_merge_strategy: SEQUENCE_MERGE_STRATEGY = SEQUENCE_MERGE_STRATEGY.REPLACE,

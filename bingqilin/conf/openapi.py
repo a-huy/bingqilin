@@ -1,11 +1,13 @@
-from typing import Type
+from typing import Type, Callable, Mapping, Any
 
 from fastapi import FastAPI
 from fastapi.openapi.constants import REF_TEMPLATE
 from fastapi.openapi.utils import get_openapi
 
-from bingqilin.conf import config, ConfigModel
-from bingqilin.db import inject_database_config_models_openapi
+from pydantic import BaseModel
+
+from bingqilin.conf import config, ConfigModel, SETTINGS_SOURCES
+from bingqilin.db import DATABASE_CONFIG_MODELS
 from bingqilin.logger import bq_logger
 
 
@@ -66,10 +68,72 @@ def add_config_model_to_openapi(fastapi_app: FastAPI):
                 + "{model}"
             )
 
-        if config.data.databases:
-            inject_database_config_models_openapi(openapi_schema, config)
+        if hasattr(config.data, "databases"):
+            inject_registry_models_to_openapi(
+                openapi_schema, "databases", DATABASE_CONFIG_MODELS, lambda m: m
+            )
+
+        if hasattr(config.data, "additional_config"):
+            inject_registry_models_to_openapi(
+                openapi_schema,
+                "additional_config",
+                SETTINGS_SOURCES,
+                lambda s: s.__source_config_model__,
+            )
 
         fastapi_app.openapi_schema = openapi_schema
         return fastapi_app.openapi_schema
 
     fastapi_app.openapi = openapi_with_config_schema
+
+
+def _inject_config_schemas(
+    schema: dict, registry: Mapping, model_getter_func: Callable[[Any], BaseModel]
+):
+    model_defs_dict = {}
+    for value in registry.values():
+        model = model_getter_func(value)
+        model_schema = model.model_json_schema(
+            ref_template=f"#/components/schemas/{config.model.__name__}/$defs/"
+            + "{model}"
+        )
+        if sub_defs := model_schema.pop("$defs", None):
+            for sub_name, sub_schema in sub_defs.items():
+                model_defs_dict[sub_name] = sub_schema
+        model_defs_dict[model.__name__] = model_schema
+    schema.update(model_defs_dict)
+
+
+def _inject_conf_property_refs(
+    properties_schema: dict,
+    registry: Mapping,
+    model_getter_func: Callable[[Any], BaseModel],
+):
+    model_ref_list = [
+        {
+            "$ref": f"#/components/schemas/{config.model.__name__}/"
+            + f"$defs/{model_getter_func(value).__name__}"
+        }
+        for value in registry.values()
+    ]
+    properties_schema["additionalProperties"] = {
+        "anyOf": [{"type": "object"}] + model_ref_list
+    }
+
+
+def inject_registry_models_to_openapi(
+    openapi_schema,
+    config_field: str,
+    registry: Mapping,
+    model_getter_func: Callable[[Any], BaseModel],
+):
+    assert config.is_loaded
+    if components := openapi_schema.get("components"):
+        if schemas := components.get("schemas"):
+            if config_schema := schemas.get(config.model.__name__):
+                if defs := config_schema.get("$defs"):
+                    _inject_config_schemas(defs, registry, model_getter_func)
+
+            if properties := config_schema.get("properties"):
+                if config_prop := properties.get(config_field):
+                    _inject_conf_property_refs(config_prop, registry, model_getter_func)

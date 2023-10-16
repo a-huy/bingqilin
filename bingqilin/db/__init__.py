@@ -46,41 +46,6 @@ def validate_databases(databases):
     return databases
 
 
-def _inject_db_conf_schemas(schema, config):
-    config_defs_dict = {}
-    for model in DATABASE_CONFIG_MODELS.values():
-        model_schema = model.model_json_schema(
-            ref_template=f"#/components/schemas/{config.model.__name__}/$defs/"
-            + "{model}"
-        )
-        if sub_defs := model_schema.pop("$defs", None):
-            for sub_name, sub_schema in sub_defs.items():
-                config_defs_dict[sub_name] = sub_schema
-        config_defs_dict[model.__name__] = model_schema
-    schema.update(config_defs_dict)
-
-
-def _inject_dbs_property_refs(schema, config):
-    model_ref_list = [
-        {"$ref": f"#/components/schemas/{config.model.__name__}/$defs/{m.__name__}"}
-        for m in DATABASE_CONFIG_MODELS.values()
-    ]
-    schema["additionalProperties"] = {"anyOf": [{"type": "object"}] + model_ref_list}
-
-
-def inject_database_config_models_openapi(openapi_schema, config):
-    assert config.is_loaded
-    if components := openapi_schema.get("components"):
-        if schemas := components.get("schemas"):
-            if config_schema := schemas.get(config.model.__name__):
-                if defs := config_schema.get("$defs"):
-                    _inject_db_conf_schemas(defs, config)
-
-                if properties := config_schema.get("properties"):
-                    if databases_prop := properties.get("databases"):
-                        _inject_dbs_property_refs(databases_prop, config)
-
-
 def register_db_client(client_name, db_client):
     if client_name in DATABASE_CLIENTS:
         raise ValueError(

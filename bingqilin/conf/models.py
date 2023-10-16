@@ -1,8 +1,10 @@
 from typing import Optional, List, Any, Union
 from pydantic import BaseModel, Field, AnyUrl, validator
+from pydantic_settings import BaseSettings
 
+from bingqilin.conf.sources import SETTINGS_SOURCES
 from bingqilin.db import validate_databases
-from bingqilin.db.models import DBDict
+from bingqilin.utils.types import AttrKeysDict
 
 
 class FastAPILicenseInfo(BaseModel):
@@ -128,16 +130,19 @@ class FastAPIConfig(BaseModel):
     )
 
 
-class ConfigModel(BaseModel):
+class ConfigModel(BaseSettings):
     """
     This is the default config model. If no additional config values are defined, then these
     are defaults that are validated.
     """
 
     debug: bool = Field(
-        default=True, description="Toggles debug features (do not use in production!)"
+        default=True,
+        description="Toggles debug features (do not enable in production!)",
     )
-    additional_config_files: List[str] = Field(
+    # The `Any` type will be replaced with the injected schema of all registered settings
+    # source config models
+    additional_config: List[Union[dict, Any]] = Field(  # type: ignore
         default=[],
         description="Additional config files to load after the initial load "
         "(via an .env file or config.yml)",
@@ -162,8 +167,8 @@ class ConfigModel(BaseModel):
 
     # The `Any` type will be replaced with the injected schema of all registered database
     # config models
-    databases: DBDict[str, Union[dict, Any]] = Field(  # type: ignore
-        default=DBDict(),
+    databases: AttrKeysDict[str, Union[dict, Any]] = Field(  # type: ignore
+        default=AttrKeysDict(),
         description="Configuration for database connections. "
         "Each database is mapped by a string name to a DBConfig (or subclass) instance "
         "or a dict. If the config is an instance of DBConfig, then an attempt is made to "
@@ -175,3 +180,9 @@ class ConfigModel(BaseModel):
     @validator("databases")
     def validate_databases(cls, databases):
         return validate_databases(databases)
+
+    def validate(self):
+        """Trigger a manual validate."""
+        self.__pydantic_validator__.validate_python(
+            self.model_dump(), self_instance=self
+        )
