@@ -10,6 +10,7 @@
 <img src="https://img.shields.io/pypi/pyversions/bingqilin.svg">
 <img src="https://img.shields.io/github/license/a-huy/bingqilin.svg">
 </p>
+
 ---
 
 Documentation: TBD
