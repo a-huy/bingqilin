@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager, contextmanager
+from typing import AsyncGenerator, Callable, Generator, Optional
 
 from sqlalchemy import URL, Engine, create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 
+from bingqilin.db import get_db_client
 from bingqilin.db.models import SQLAlchemyDBConfig
 
 
@@ -66,3 +68,46 @@ class SQLAlchemyClient:
     async def async_db_ctx(self):
         async for _ in self.get_async_db():
             yield _
+
+
+def get_sync_db(client_name: Optional[str] = None) -> Callable[..., Generator]:
+    """Convenience function to make it easy to add a FastAPI dependency for a database
+    client that may not exist until after configuration has loaded. When the dependency
+    is resolved, it will return a synchronous SQLAlchemy session object.
+
+    Args:
+        client_name (Optional[str], optional): The name of the client.
+        If one is not provided, the "default" client is retrieved.
+
+    Returns:
+        Callable[..., Generator]: Function returned for use with `Depends()`
+    """
+
+    def _resolve():
+        client: SQLAlchemyClient = get_db_client(client_name)
+        yield from client.get_sync_db()
+
+    return _resolve
+
+
+def get_async_db(
+    client_name: Optional[str] = None,
+) -> Callable[..., AsyncGenerator]:
+    """Convenience function to make it easy to add a FastAPI dependency for a database
+    client that may not exist until after configuration has loaded. When the dependency
+    is resolved, it will return an asynchronous SQLAlchemy session object.
+
+    Args:
+        client_name (Optional[str], optional): The name of the client.
+        If one is not provided, the "default" client is retrieved.
+
+    Returns:
+        Callable[..., AsyncGenerator]: Function returned for use with `Depends()`
+    """
+
+    async def _resolve():
+        client: SQLAlchemyClient = get_db_client(client_name)
+        async for _ in client.get_async_db():
+            yield _
+
+    return _resolve

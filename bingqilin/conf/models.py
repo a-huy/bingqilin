@@ -1,11 +1,16 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, TypeVar
 
 from pydantic import AnyUrl, BaseModel, Field, validator
 from pydantic_settings import BaseSettings
 
-from bingqilin.conf.sources import SETTINGS_SOURCES
+from bingqilin.conf.sources import BaseSourceConfig
 from bingqilin.db import validate_databases
+from bingqilin.db.models import DBConfig
 from bingqilin.utils.types import AttrKeysDict
+
+
+DBConfigType = TypeVar("DBConfigType", bound=DBConfig)
+SourceConfigType = TypeVar("SourceConfigType", bound=BaseSourceConfig)
 
 
 class FastAPILicenseInfo(BaseModel):
@@ -141,9 +146,9 @@ class ConfigModel(BaseSettings):
         default=True,
         description="Toggles debug features (do not enable in production!)",
     )
-    # The `Any` type will be replaced with the injected schema of all registered settings
-    # source config models
-    additional_config: List[Union[dict, Any]] = Field(  # type: ignore
+    # The `SourceConfigType` type will be replaced with the injected schema of all
+    # registered settings source config models
+    additional_config: List[Union[dict, SourceConfigType]] = Field(  # type: ignore
         default=[],
         description="Additional config files to load after the initial load "
         "(via an .env file or config.yml)",
@@ -166,9 +171,9 @@ class ConfigModel(BaseSettings):
         "callback handlers.",
     )
 
-    # The `Any` type will be replaced with the injected schema of all registered database
-    # config models
-    databases: AttrKeysDict[str, Union[dict, Any]] = Field(  # type: ignore
+    # The `DBConfigType` type will be replaced with the injected schema of all registered
+    # database config models
+    databases: AttrKeysDict[str, Union[dict, DBConfigType]] = Field(  # type: ignore
         default=AttrKeysDict(),
         description="Configuration for database connections. "
         "Each database is mapped by a string name to a DBConfig (or subclass) instance "
