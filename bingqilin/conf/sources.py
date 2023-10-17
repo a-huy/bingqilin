@@ -1,22 +1,21 @@
 from configparser import SafeConfigParser
-from typing import Any, Dict, List, Literal, Type, Optional, Union, Self
 from pathlib import Path
-from typing_extensions import Literal
+from typing import Any, Dict, List, Literal, Optional, Self, Type, Union
 
 from pydantic import BaseModel, ConfigDict, create_model
 from pydantic.fields import FieldInfo
 from pydantic.types import FilePath
 from pydantic_settings import (
-    PydanticBaseSettingsSource,
     DotEnvSettingsSource,
+    PydanticBaseSettingsSource,
     SecretsSettingsSource,
 )
 from pydantic_settings.main import BaseSettings
-from pydantic_settings.sources import DotenvType, ENV_FILE_SENTINEL
+from pydantic_settings.sources import ENV_FILE_SENTINEL, DotenvType
+from typing_extensions import Literal
 
 from bingqilin.utils.dict import merge
 from bingqilin.utils.types import RegistryMeta, get_annotation_literal_value
-
 
 SETTINGS_SOURCES: Dict[str, Type["BingqilinSettingsSource"]] = {}
 
@@ -188,6 +187,8 @@ class BingqilinIniSettingsSource(BingqilinSettingsSource):
     class SourceConfig(BaseSourceConfig):
         files: List[Path]
         file_encoding: Optional[str] = None
+
+        model_config = ConfigDict(title="IniSourceConfig")
 
     def __init__(
         self, settings_cls: Type[BaseSettings], files=None, file_encoding=None

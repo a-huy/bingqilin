@@ -1,7 +1,8 @@
 from typing import Union
 
 from redis import Redis, RedisCluster
-from redis.asyncio import Redis as AsyncRedis, RedisCluster as AsyncRedisCluster
+from redis.asyncio import Redis as AsyncRedis
+from redis.asyncio import RedisCluster as AsyncRedisCluster
 from redis.asyncio.cluster import ClusterNode as AsyncClusterNode
 from redis.cluster import ClusterNode
 

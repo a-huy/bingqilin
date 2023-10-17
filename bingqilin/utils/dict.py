@@ -1,6 +1,5 @@
 from enum import Enum
-from typing import Mapping, MutableMapping, MutableSequence, Any, List, Dict
-
+from typing import Any, Dict, Mapping, MutableMapping, MutableSequence
 
 DEFAULT_PATH_DELIMITER = "/"
 

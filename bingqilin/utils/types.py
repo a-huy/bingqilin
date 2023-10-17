@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-from typing import Optional, Any, MutableMapping, Self, Dict, Callable
-from typing_extensions import get_args
+from typing import Any, Callable, Dict, MutableMapping, Optional, Self
 
 from pydantic._internal._validators import import_string
 from pydantic_core import core_schema
+from typing_extensions import get_args
 
 
 def get_annotation_literal_value(obj, attr_name):

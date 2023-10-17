@@ -1,8 +1,7 @@
-from typing import Optional, Any
+from typing import Any, Optional
 
-from bingqilin.db.models import DBConfig, DATABASE_CONFIG_MODELS
+from bingqilin.db.models import DATABASE_CONFIG_MODELS, DBConfig
 from bingqilin.logger import bq_logger
-
 
 logger = bq_logger.getChild("db")
 

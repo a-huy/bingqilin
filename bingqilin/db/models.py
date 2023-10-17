@@ -1,23 +1,10 @@
 from abc import abstractmethod
-from functools import reduce
-from typing import (
-    Any,
-    Optional,
-    Literal,
-    Mapping,
-    Union,
-    Sequence,
-    Dict,
-    List,
-    Type,
-)
+from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from pydantic import BaseModel, model_validator, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic._internal._model_construction import ModelMetaclass
-from pydantic._internal._generics import PydanticGenericMetadata
 
 from bingqilin.utils.types import RegistryMeta
-
 
 DATABASE_CONFIG_MODELS: Dict[str, Type["DBConfig"]] = {}
 
@@ -80,7 +67,7 @@ class SQLAlchemyDBConfig(DBConfig):
         return self
 
     def get_url(self):
-        from sqlalchemy import make_url, URL
+        from sqlalchemy import URL, make_url
 
         if self.url:
             return make_url(self.url)

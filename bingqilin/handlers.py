@@ -1,10 +1,10 @@
 import json
+
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 
 from bingqilin.logger import bq_logger
-
 
 logger = bq_logger.getChild("handlers")
 

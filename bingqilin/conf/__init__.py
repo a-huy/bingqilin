@@ -1,13 +1,11 @@
 import copy
-
-from typing import Type, Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional, Type
 
 from bingqilin.logger import bq_logger
 from bingqilin.utils.dict import merge
 
 from .models import ConfigModel
 from .sources import SETTINGS_SOURCES, BingqilinSettingsSource
-
 
 logger = bq_logger.getChild("conf")
 

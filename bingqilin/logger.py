@@ -1,4 +1,3 @@
 import logging
 
-
-bq_logger = logging.getLogger('bingqilin')
+bq_logger = logging.getLogger("bingqilin")

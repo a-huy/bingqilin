@@ -1,15 +1,13 @@
-from typing import Type, Callable, Mapping, Any
+from typing import Any, Callable, Mapping, Type
 
 from fastapi import FastAPI
 from fastapi.openapi.constants import REF_TEMPLATE
 from fastapi.openapi.utils import get_openapi
-
 from pydantic import BaseModel
 
-from bingqilin.conf import config, ConfigModel, SETTINGS_SOURCES
+from bingqilin.conf import SETTINGS_SOURCES, ConfigModel, config
 from bingqilin.db import DATABASE_CONFIG_MODELS
 from bingqilin.logger import bq_logger
-
 
 logger = bq_logger.getChild("conf.routes")
 

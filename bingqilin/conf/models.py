@@ -1,5 +1,6 @@
-from typing import Optional, List, Any, Union
-from pydantic import BaseModel, Field, AnyUrl, validator
+from typing import Any, List, Optional, Union
+
+from pydantic import AnyUrl, BaseModel, Field, validator
 from pydantic_settings import BaseSettings
 
 from bingqilin.conf.sources import SETTINGS_SOURCES

@@ -1,8 +1,8 @@
-from typing import Type, Optional, Union, Any
+from typing import Any, Optional, Type, Union
 
 from fastapi import FastAPI
 
-from bingqilin.conf import ConfigModel, initialize_config, config
+from bingqilin.conf import ConfigModel, config, initialize_config
 from bingqilin.conf.openapi import add_config_model_to_openapi
 from bingqilin.db import initialize_databases
 from bingqilin.handlers import add_log_validation_exception_handler
