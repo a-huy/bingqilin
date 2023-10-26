@@ -14,7 +14,8 @@ def get_annotation_literal_value(obj, attr_name):
             return attr_annotation.__args__[0]
 
     raise ValueError(
-        f'The "{attr_name}" attribute must exist on {obj} and be annotated with a literal string.'
+        f'The "{attr_name}" attribute must exist on {obj} and be annotated with a "
+        "literal string.'
     )
 
 

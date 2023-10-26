@@ -1,4 +1,4 @@
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Self, Type, Union
 
@@ -148,9 +148,14 @@ class BingqilinSecretSettingsSource(SecretsSettingsSource, BingqilinSettingsSour
         model_config = ConfigDict(title="SecretsSourceConfig")
 
 
-class BingqilinYamlSettingsSource(BingqilinSettingsSource):
+class YamlSettingsSource(BingqilinSettingsSource):
     type: Literal["yaml"]
     package_deps = ["pyyaml"]
+
+    class SourceConfig(BaseSourceConfig):
+        files: List[FilePath]
+
+        model_config = ConfigDict(title="YamlSourceConfig")
 
     def __init__(self, settings_cls: Type[BaseSettings], files=None):
         super().__init__(settings_cls)
@@ -175,13 +180,8 @@ class BingqilinYamlSettingsSource(BingqilinSettingsSource):
     ) -> tuple[Any, str, bool]:
         return self.loaded_config.get(field_name), field_name, False
 
-    class SourceConfig(BaseSourceConfig):
-        files: List[FilePath]
 
-        model_config = ConfigDict(title="YamlSourceConfig")
-
-
-class BingqilinIniSettingsSource(BingqilinSettingsSource):
+class IniSettingsSource(BingqilinSettingsSource):
     type: Literal["ini"]
 
     class SourceConfig(BaseSourceConfig):
@@ -201,7 +201,7 @@ class BingqilinIniSettingsSource(BingqilinSettingsSource):
             else settings_cls.model_config.get("ini_file_encoding") or None
         )
 
-        parser = SafeConfigParser()
+        parser = ConfigParser()
         for filename in self.files:
             parser.read(filename)
 
@@ -211,3 +211,8 @@ class BingqilinIniSettingsSource(BingqilinSettingsSource):
             config[section] = parser.options(section)
 
         self.loaded_config = config
+
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> tuple[Any, str, bool]:
+        return self.loaded_config.get(field_name), field_name, False

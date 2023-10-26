@@ -9,9 +9,12 @@ from redis.cluster import ClusterNode
 from bingqilin.db.models import RedisDBConfig
 
 
+RedisClientTypes = Union[Redis, RedisCluster, AsyncRedis, AsyncRedisCluster]
+
+
 def make_redis_client(
     config: RedisDBConfig,
-) -> Union[Redis, RedisCluster, AsyncRedis, AsyncRedisCluster]:
+) -> RedisClientTypes:
     if config.nodes:
         if config.is_async:
             nodes = [AsyncClusterNode(**dict(node_conf)) for node_conf in config.nodes]

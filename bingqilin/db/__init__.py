@@ -1,5 +1,7 @@
 from typing import Any, Optional
 
+from pydantic import BaseModel
+
 from bingqilin.db.models import DATABASE_CONFIG_MODELS, DBConfig
 from bingqilin.logger import bq_logger
 
@@ -10,12 +12,7 @@ DATABASE_CLIENTS = {}
 DEFAULT_CLIENT_NAME = "default"
 
 
-def initialize_databases(db_config=None):
-    if not db_config:
-        from bingqilin.conf import config
-
-        db_config = config.data.databases
-
+def initialize_databases(db_config):
     if not db_config:
         logger.debug("No databases config found.")
         return
@@ -35,7 +32,12 @@ def initialize_databases(db_config=None):
 
 
 def validate_databases(databases):
-    for name, db_conf in databases.items():
+    _db_config = databases
+    if isinstance(_db_config, BaseModel):
+        _db_config = {
+            _n: getattr(_db_config, _n) for _n in _db_config.model_fields.keys()
+        }
+    for name, db_conf in _db_config.items():
         if isinstance(db_conf, dict):
             if adapter_type := db_conf.get("type"):
                 if adapter_type in DATABASE_CONFIG_MODELS:

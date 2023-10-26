@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bingqilin"
-version = "0.3.0"
+version = "0.4.0"
 description = "A collection of utilities for building APIs with FastAPI"
 license = "MIT"
 authors = ["Andy <andy@ahn.io>"]
@@ -10,21 +10,16 @@ keywords = ["bingqilin", "fastapi"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
-fastapi = "^0.103.2"
+fastapi = ">=0.103.2"
+pydantic-settings = ">=2.0.3"
 pydantic = "^2.4.2"
-python-dotenv = {version = "^1.0.0", optional = true}
-pyyaml = {version = "^6.0.1", optional = true}
-
-
-[tool.poetry.extras]
-config = ["python-dotenv", "pyyaml"]
-
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.23.2"
 ipython = "^8.16.1"
 sqlalchemy = "^2.0.21"
 redis = {extras = ["hiredis"], version = "^5.0.1"}
+mkdocs-material = "^9.4.5"
 
 [build-system]
 requires = ["poetry-core"]

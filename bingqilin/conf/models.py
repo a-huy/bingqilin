@@ -1,13 +1,17 @@
-from typing import Any, List, Optional, Union, TypeVar
+from typing import Any, Optional, Sequence, TypeVar, Union
 
-from pydantic import AnyUrl, BaseModel, Field, validator
-from pydantic_settings import BaseSettings
+from fastapi import FastAPI
+from pydantic import AnyUrl, BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import PydanticBaseSettingsSource
 
-from bingqilin.conf.sources import BaseSourceConfig
-from bingqilin.db import validate_databases
+from bingqilin.conf.sources import (
+    BaseSourceConfig,
+    IniSettingsSource,
+    YamlSettingsSource,
+)
 from bingqilin.db.models import DBConfig
 from bingqilin.utils.types import AttrKeysDict
-
 
 DBConfigType = TypeVar("DBConfigType", bound=DBConfig)
 SourceConfigType = TypeVar("SourceConfigType", bound=BaseSourceConfig)
@@ -83,10 +87,10 @@ class FastAPIConfig(BaseModel):
         default="/openapi.json",
         description="Path for the OpenAPI schema JSON dump.",
     )
-    openapi_tags: Optional[List[OpenAPITag]] = Field(
+    openapi_tags: Optional[Sequence[OpenAPITag]] = Field(
         default=None, description="A list of metadata for tags used in path operations."
     )
-    servers: Optional[List[FastAPIServer]] = Field(
+    servers: Optional[Sequence[FastAPIServer]] = Field(
         default=None,
         description="Specify additional servers in the OpenAPI schema. "
         "This can be used to test against other environments from the same docs page. "
@@ -135,6 +139,17 @@ class FastAPIConfig(BaseModel):
         "More info [here](https://fastapi.tiangolo.com/how-to/separate-openapi-schemas/).",
     )
 
+    def create_app(self, **additional_options) -> FastAPI:
+        app_options = self.model_dump()
+        app_options.update(additional_options)
+        return FastAPI(**app_options)
+
+
+class ConfigModelConfigDict(SettingsConfigDict, total=False):
+    yaml_files: Optional[Sequence[str]]
+    ini_files: Optional[Sequence[str]]
+    ini_file_encoding: Optional[str]
+
 
 class ConfigModel(BaseSettings):
     """
@@ -145,13 +160,6 @@ class ConfigModel(BaseSettings):
     debug: bool = Field(
         default=True,
         description="Toggles debug features (do not enable in production!)",
-    )
-    # The `SourceConfigType` type will be replaced with the injected schema of all
-    # registered settings source config models
-    additional_config: List[Union[dict, SourceConfigType]] = Field(  # type: ignore
-        default=[],
-        description="Additional config files to load after the initial load "
-        "(via an .env file or config.yml)",
     )
     add_config_model_schema: bool = Field(
         default=True,
@@ -170,7 +178,17 @@ class ConfigModel(BaseSettings):
         "routes that support a lot of different types of requests, such as third-party "
         "callback handlers.",
     )
-
+    allow_reconfigure: bool = Field(
+        default=True,
+        description="Enables reconfiguring settings and related constructs. If disabled, "
+        "this will prevent any handlers being added to the reconfigure signal as well as "
+        "the path operation from being added to the app's router.",
+    )
+    reconfigure_url: Optional[str] = Field(
+        default="/reconfigure",
+        description="Path to add the handler to trigger a reconfigure via an HTTP POST "
+        "request. Set this to null or empty string to disable.",
+    )
     # The `DBConfigType` type will be replaced with the injected schema of all registered
     # database config models
     databases: AttrKeysDict[str, Union[dict, DBConfigType]] = Field(  # type: ignore
@@ -183,12 +201,20 @@ class ConfigModel(BaseSettings):
 
     fastapi: FastAPIConfig = FastAPIConfig()
 
-    @validator("databases")
-    def validate_databases(cls, databases):
-        return validate_databases(databases)
-
-    def validate(self):
-        """Trigger a manual validate."""
-        self.__pydantic_validator__.validate_python(
-            self.model_dump(), self_instance=self
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+            YamlSettingsSource(settings_cls),
+            IniSettingsSource(settings_cls),
         )

@@ -97,21 +97,21 @@ class RedisDBConfig(DBConfig):
     type: Literal["redis"]
 
     # Usual Redis fields used for connecting
-    port: int = 6379
-    db: int = 0
-    username: Optional[str] = None
-    password: Optional[str] = None
+    port: int = Field(default=6379)
+    db: int = Field(default=0)
+    username: Optional[str] = Field(default=None)
+    password: Optional[str] = Field(default=None)
 
     # Less common options
-    unix_socket_path: Optional[str] = None
-    ssl: bool = False
-    ssl_keyfile: Optional[str] = None
-    ssl_certfile: Optional[str] = None
-    ssl_cert_reqs: str = "required"
-    ssl_ca_certs: Optional[str] = None
-    ssl_ca_data: Optional[str] = None
-    ssl_check_hostname: bool = False
-    socket_connect_timeout: Optional[int] = None
+    unix_socket_path: Optional[str] = Field(default=None)
+    ssl: bool = Field(default=False)
+    ssl_keyfile: Optional[str] = Field(default=None)
+    ssl_certfile: Optional[str] = Field(default=None)
+    ssl_cert_reqs: str = Field(default="required")
+    ssl_ca_certs: Optional[str] = Field(default=None)
+    ssl_ca_data: Optional[str] = Field(default=None)
+    ssl_check_hostname: bool = Field(default=False)
+    socket_connect_timeout: Optional[int] = Field(default=None)
 
     is_async: bool = Field(
         default=True,
@@ -120,7 +120,7 @@ class RedisDBConfig(DBConfig):
     )
 
     # If not empty, this will return a RedisCluster object.
-    nodes: Optional[List[RedisClusterNodeConfig]] = None
+    nodes: Optional[List[RedisClusterNodeConfig]] = Field(default=None)
 
     def initialize_client(self):
         from .redis import make_redis_client
