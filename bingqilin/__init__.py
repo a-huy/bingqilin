@@ -7,7 +7,7 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 
-from bingqilin.conf.models import ConfigModel
+from bingqilin.conf.models import ConfigModel, DEFAULT_RECONFIGURE_URL
 from bingqilin.conf.openapi import add_config_model_to_openapi
 from bingqilin.contexts import ContextManager
 from bingqilin.handlers import add_log_validation_exception_handler
@@ -68,21 +68,32 @@ def add_reconfigure_handler(path: str, app: FastAPI):
     app.router.post(path)(reconfigure_handler)
 
 
-def setup_utils(settings_data: ConfigModel, app: FastAPI):
+def setup_utils(
+    app: FastAPI,
+    settings_data: Optional[ConfigModel],
+    log_validation_errors: bool = True,
+    allow_reconfigure: bool = True,
+    reconfigure_url: str = DEFAULT_RECONFIGURE_URL,
+):
     """
     Initializes all the default utilities of bingqilin.
     You can opt to manually initialize whatever features you'd like,
     but most of them are built on top of a validated settings model.
+
+    Allow some overrides via kwargs.
     """
-    if settings_data.log_validation_errors:
+    if log_validation_errors or (settings_data and settings_data.log_validation_errors):
         add_log_validation_exception_handler(app)
 
-    if settings_data.allow_reconfigure and (
-        reconfigure_url := settings_data.reconfigure_url
+    if (allow_reconfigure or (settings_data and settings_data.allow_reconfigure)) and (
+        _reconfigure_url := (
+            reconfigure_url or (settings_data and settings_data.reconfigure_url)
+        )
     ):
-        add_reconfigure_handler(reconfigure_url, app)
+        add_reconfigure_handler(_reconfigure_url, app)
 
-    if settings_data.add_config_model_schema:
+    # This feature is exclusive to ConfigModels
+    if settings_data and settings_data.add_config_model_schema:
         add_config_model_to_openapi(
             settings_data, app, settings_data.flatten_config_schema
         )

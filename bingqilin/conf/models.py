@@ -15,6 +15,7 @@ from bingqilin.utils.types import AttrKeysDict
 
 DBConfigType = TypeVar("DBConfigType", bound=DBConfig)
 SourceConfigType = TypeVar("SourceConfigType", bound=BaseSourceConfig)
+DEFAULT_RECONFIGURE_URL = "/reconfigure"
 
 
 class FastAPILicenseInfo(BaseModel):
@@ -185,7 +186,7 @@ class ConfigModel(BaseSettings):
         "the path operation from being added to the app's router.",
     )
     reconfigure_url: Optional[str] = Field(
-        default="/reconfigure",
+        default=DEFAULT_RECONFIGURE_URL,
         description="Path to add the handler to trigger a reconfigure via an HTTP POST "
         "request. Set this to null or empty string to disable.",
     )
