@@ -23,13 +23,13 @@ Source Code: [https://github.com/a-huy/bingqilin](https://github.com/a-huy/bingq
 
 This package contains some utilities for common actions and resources for your FastAPI app:
 
-* **Extended Settings Loading** - Bingqilin provides a config loading system that is an extension on top of pydantic's `BaseSettings`:
+* **Extended Settings Loading** - Bingqilin provides additional pieces to enhance Pydantic's `BaseSettings`:
     * Add settings sources to enable loading from `.yaml` files or `.ini` files
     * Allow the option to add the settings model to the OpenAPI docs (`/docs`)
-    * Provide a handle to the loaded config instance via `bingqilin.conf:config`
+    * A base `ConfigModel` derived from Pydantic's `BaseSettings` that will allow configuring parts of your FastAPI app and Bingqilin's utilities via settings 
+    * Provides a `SettingsManager` class to attach your settings model to allow live reconfiguring
 
-* **Database Client Initialization** - Allow initializing connection clients and pools from database config. 
-    This will provide a way to grab a client handle via `bingqilin.db:get_db_client()`.
+* **Reconfigurable Contexts** - Provide constructs to declare shared connection objects (such as databases and third-party clients) that can be initialized from settings and can be enabled for live reconfiguring.
 
 * **Validation Error Logging** - Add an exception handler for `RequestValidationError` that emits a log. 
     Useful for troubleshooting routes that support a lot of different types of requests, such as 
@@ -37,7 +37,7 @@ This package contains some utilities for common actions and resources for your F
 
 ## Requirements
 
-This package is intended for use with any recent version of FastAPI that supports `pydantic>=2.0` and Python 3.10+.
+This package is intended for use with any recent version of FastAPI (`>=0.95.2`).
 
 ## Installation
 
