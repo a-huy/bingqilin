@@ -2,14 +2,14 @@
 title: Configuration
 ---
 
-Setting up a settings instance in Bingqilin is a little different:
+Creating a settings instance in Bingqilin is a little different:
 
 ```py
 from bingqilin.conf import SettingsManager
 from bingqilin.conf.models import ConfigModel
 
 class AppSettings(SettingsManager):
-    data: ConfigModel()
+    data: ConfigModel
 
 settings = AppSettings().load(_env_file=".env", _env_nested_delimiter="__")
 settings.load(_env_file=".env", _env_nested_delimiter="__")
@@ -19,8 +19,7 @@ app = settings.data.fastapi.create_app()
 
 ## SettingsManager
 
-
-
+The `SettingsManager` object is a thin wrapper around your settings model instance that will automatically register a reconfigure handler while preserving references to it from other parts of your app.
 
 ## ConfigModel
 
