@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, Self, Type
 
 from pydantic_settings import BaseSettings
 
@@ -28,7 +28,7 @@ class SettingsManager:
             )
         return data_class
 
-    def load(self, allow_reconfigure: bool = True, **settings_init_kwargs):
+    def load(self, allow_reconfigure: bool = True, **settings_init_kwargs) -> Self:
         data_class = self._get_data_annotated_class()
 
         def reload():

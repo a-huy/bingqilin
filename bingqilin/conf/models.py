@@ -1,20 +1,16 @@
 from typing import Any, Optional, Sequence, TypeVar, Union
 
 from fastapi import FastAPI
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import PydanticBaseSettingsSource
 
-from bingqilin.conf.sources import (
-    BaseSourceConfig,
-    IniSettingsSource,
-    YamlSettingsSource,
-)
+from bingqilin.conf.sources import IniSettingsSource, YamlSettingsSource
+from bingqilin.db import validate_databases
 from bingqilin.db.models import DBConfig
 from bingqilin.utils.types import AttrKeysDict
 
 DBConfigType = TypeVar("DBConfigType", bound=DBConfig)
-SourceConfigType = TypeVar("SourceConfigType", bound=BaseSourceConfig)
 DEFAULT_RECONFIGURE_URL = "/reconfigure"
 
 
@@ -191,7 +187,7 @@ class ConfigModel(BaseSettings):
         "request. Set this to null or empty string to disable.",
     )
     # The `DBConfigType` type will be replaced with the injected schema of all registered
-    # database config models
+    # database config models in the OpenAPI schema
     databases: AttrKeysDict[str, Union[dict, DBConfigType]] = Field(  # type: ignore
         default=AttrKeysDict(),
         description="Configuration for database connections. "
@@ -201,6 +197,10 @@ class ConfigModel(BaseSettings):
     )
 
     fastapi: FastAPIConfig = FastAPIConfig()
+
+    @validator("databases")
+    def validate_databases(cls, databases):
+        return validate_databases(databases)
 
     @classmethod
     def settings_customise_sources(
