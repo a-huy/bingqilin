@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Self, Type
 
 from pydantic_settings import BaseSettings
@@ -12,6 +13,7 @@ logger = bq_logger.getChild("conf")
 
 class SettingsManager:
     data: Any
+    last_loaded_at: datetime
 
     def __init__(self) -> None:
         super().__init__()
@@ -33,6 +35,7 @@ class SettingsManager:
 
         def reload():
             self.data = data_class(**settings_init_kwargs)
+            self.last_loaded_at = datetime.now()
 
         reload()
 
