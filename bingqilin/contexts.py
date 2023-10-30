@@ -15,7 +15,7 @@ from bingqilin.signal import RECONFIGURE_SIGNAL, dispatcher
 
 logger = bq_logger.getChild("contexts")
 
-context_classes: OrderedDict[str, "ContextManagerMeta"] = OrderedDict()
+context_classes: OrderedDict[str, "LifespanContextMeta"] = OrderedDict()
 
 
 class ContextFieldTypes(StrEnum):
@@ -190,7 +190,7 @@ def terminator(field: str):
     return inner
 
 
-class ContextManagerMeta(type):
+class LifespanContextMeta(type):
     name: str = ""
 
     def __new__(
@@ -200,7 +200,7 @@ class ContextManagerMeta(type):
         __namespace: dict[str, Any],
         **kwargs: Any,
     ) -> Self:
-        if __name == "ContextManager":
+        if __name == "LifespanContext":
             return super().__new__(__mcls, __name, __bases, __namespace, **kwargs)
 
         __namespace["__context_fields__"] = {}
@@ -245,7 +245,7 @@ class ContextManagerMeta(type):
         return newcls
 
 
-class ContextManager(metaclass=ContextManagerMeta):
+class LifespanContext(metaclass=LifespanContextMeta):
     name: Optional[str] = None
     allow_reconfigure = True
 

@@ -1,7 +1,7 @@
 from bingqilin import setup_utils
 from bingqilin.conf import SettingsManager
 from bingqilin.conf.models import ConfigModel
-from bingqilin.contexts import ContextManager, initializer
+from bingqilin.contexts import LifespanContext, initializer
 from bingqilin.db.models import RedisDBConfig
 
 
@@ -12,7 +12,7 @@ class AppSettings(SettingsManager):
 settings = AppSettings()
 
 
-class Context(ContextManager):
+class Context(LifespanContext):
     test: int
 
     @initializer("redis")
