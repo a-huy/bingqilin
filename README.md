@@ -13,7 +13,7 @@
 
 ---
 
-Documentation: TBD
+Documentation: [https://a-huy.github.io/bingqilin/](https://a-huy.github.io/bingqilin/)
 
 Source Code: [https://github.com/a-huy/bingqilin](https://github.com/a-huy/bingqilin)
 
