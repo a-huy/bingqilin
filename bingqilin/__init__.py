@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from bingqilin.conf.models import ConfigModel, DEFAULT_RECONFIGURE_URL
 from bingqilin.conf.openapi import add_config_model_to_openapi
-from bingqilin.contexts import ContextManager
+from bingqilin.contexts import LifespanContext
 from bingqilin.handlers import add_log_validation_exception_handler
 from bingqilin.logger import bq_logger
 from bingqilin.signal import RECONFIGURE_SIGNAL, dispatcher
@@ -18,7 +18,7 @@ logger = bq_logger.getChild("handlers")
 
 
 def contexts_lifespan(
-    *contexts: ContextManager,
+    *contexts: LifespanContext,
     settings_data: Optional[BaseModel] = None,
     **all_ctx_kwargs,
 ) -> Callable:

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import Session, sessionmaker
 
-from bingqilin.contexts import ContextFieldTypes, ContextManager
+from bingqilin.contexts import ContextFieldTypes, LifespanContext
 from bingqilin.db.models import SQLAlchemyDBConfig
 
 
@@ -71,7 +71,7 @@ class SQLAlchemyClient:
 
 
 def get_sync_db(
-    ctx_object: ContextManager, client_name: Optional[str] = None
+    ctx_object: LifespanContext, client_name: Optional[str] = None
 ) -> Callable[..., Generator]:
     """Convenience function to make it easy to add a FastAPI dependency for a database
     client that may not exist until after configuration has loaded. When the dependency
@@ -98,7 +98,7 @@ def get_sync_db(
 
 
 def get_async_db(
-    ctx_object: ContextManager, client_name: Optional[str] = None
+    ctx_object: LifespanContext, client_name: Optional[str] = None
 ) -> Callable[..., AsyncGenerator]:
     """Convenience function to make it easy to add a FastAPI dependency for a database
     client that may not exist until after configuration has loaded. When the dependency

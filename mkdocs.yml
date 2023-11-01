@@ -1,0 +1,55 @@
+site_name: Bingqilin Docs
+site_description: A collection of utilities for FastAPI
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default 
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    # - content.code.annotate
+    - content.code.copy
+    - navigation.expand
+    - navigation.path
+
+repo_name: a-huy/bingqilin
+repo_url: https://github.com/a-huy/bingqilin
+
+nav:
+  - Home: "index.md"
+  - User Guide:
+    - Setup: "user-guide/setup.md"
+    - Settings and ConfigModel: "user-guide/configuration.md"
+    - Contexts: "user-guide/contexts.md"
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - toc:
+      permalink: true
