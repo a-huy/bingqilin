@@ -24,7 +24,7 @@ class ContextFieldTypes(StrEnum):
 
 
 class ContextFieldInfo:
-    ctx_type: str = ""
+    namespace: str = ""
     UNKNOWN = "_unknown"
 
     config_model: Optional[Type[BaseModel]]
@@ -36,14 +36,14 @@ class ContextFieldInfo:
 
     def __init__(
         self,
-        ctx_type: str,
+        namespace: str,
         config_model: Optional[Type[BaseModel]] = None,
         initialize_func: Optional[Callable] = None,
         terminate_func: Optional[Callable] = None,
         config_getter_func: Optional[Callable[[BaseModel], Any]] = None,
         is_default: bool = False,
     ) -> None:
-        self.ctx_type = ctx_type
+        self.namespace = namespace
         self.config_model = config_model
         self.initialize_func = initialize_func
         self.terminate_func = terminate_func
@@ -52,7 +52,7 @@ class ContextFieldInfo:
 
 
 def ContextField(
-    ctx_type: Optional[str] = None,
+    namespace: Optional[str] = None,
     config_model: Optional[Type[BaseModel]] = None,
     initialize_func: Optional[Callable] = None,
     terminate_func: Optional[Callable] = None,
@@ -60,7 +60,7 @@ def ContextField(
     is_default: bool = False,
 ) -> Any:
     return ContextFieldInfo(
-        ctx_type or ContextFieldInfo.UNKNOWN,
+        namespace or ContextFieldInfo.UNKNOWN,
         config_model=config_model,
         initialize_func=initialize_func,
         terminate_func=terminate_func,
@@ -212,13 +212,13 @@ class LifespanContextMeta(type):
             if isinstance(field_type, ContextFieldInfo):
                 __namespace["__context_fields__"][field] = field_type
                 if field_type.is_default:
-                    if field_type.ctx_type in __namespace["__default_fields__"]:
+                    if field_type.namespace in __namespace["__default_fields__"]:
                         raise ValueError(
                             f"Multiple attributes for context {__name} are marked as "
-                            f'default for their ctx type "{field_type.ctx_type}". '
+                            f'default for their ctx type "{field_type.namespace}". '
                             "Only one can be default."
                         )
-                    __namespace["__default_fields__"][field_type.ctx_type] = field
+                    __namespace["__default_fields__"][field_type.namespace] = field
 
             elif isinstance(field_type, InitializerDescriptorProxy):
                 _field_name = field_type.decorator_info.field
@@ -329,7 +329,7 @@ class LifespanContext(metaclass=LifespanContextMeta):
         return False
 
     def _get_config_from_settings_data(self, field, field_info, settings_data):
-        if context_config := getattr(settings_data, field_info.ctx_type, None):
+        if context_config := getattr(settings_data, field_info.namespace, None):
             if field_config := getattr(context_config, field):
                 return field_config
 
@@ -422,14 +422,14 @@ class LifespanContext(metaclass=LifespanContextMeta):
             elif _f_term := self.__field_terminators__.get(field):
                 _f_term(attr_value)
 
-    def get_default(self, context_type: Optional[str] = None) -> Any:
-        if not context_type and len(self.__default_fields__) == 1:
-            context_type = tuple(self.__default_fields__.keys())[0]
+    def get_default(self, namespace: Optional[str] = None) -> Any:
+        if not namespace and len(self.__default_fields__) == 1:
+            namespace = tuple(self.__default_fields__.keys())[0]
 
-        if not context_type or context_type not in self.__default_fields__:
+        if not namespace or namespace not in self.__default_fields__:
             return None
 
-        return getattr(self, self.__default_fields__[context_type], None)
+        return getattr(self, self.__default_fields__[namespace], None)
 
 
 # Convenience context field types
