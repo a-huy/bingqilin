@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bingqilin"
-version = "0.4.0"
+version = "0.4.1"
 description = "A collection of utilities for building APIs with FastAPI"
 license = "MIT"
 authors = ["Andy <andy@ahn.io>"]
@@ -10,7 +10,7 @@ keywords = ["bingqilin", "fastapi"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
-fastapi = ">=0.95.2"
+fastapi = ">=0.95.2,<1.0.0"
 pydantic-settings = ">=2.0.3"
 pydantic = "^2.4.2"
 
