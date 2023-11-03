@@ -20,6 +20,7 @@ ipython = "^8.16.1"
 sqlalchemy = "^2.0.21"
 redis = {extras = ["hiredis"], version = "^5.0.1"}
 mkdocs-material = "^9.4.5"
+pytest = "^7.4.3"
 
 [build-system]
 requires = ["poetry-core"]
