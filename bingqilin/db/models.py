@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 from pydantic._internal._model_construction import ModelMetaclass
 
 from bingqilin.utils.types import RegistryMeta
@@ -43,8 +43,7 @@ class DBConfig(BaseModel, metaclass=DBConfigMeta):
         properties = schema["properties"]
         return properties["type"]["const"]
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra='allow')
 
 
 class SQLAlchemyDBConfig(DBConfig):

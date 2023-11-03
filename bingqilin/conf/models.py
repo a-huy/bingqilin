@@ -1,9 +1,10 @@
 from typing import Any, Optional, Sequence, TypeVar, Union
 
 from fastapi import FastAPI
-from pydantic import AnyUrl, BaseModel, Field, validator
+from pydantic import AfterValidator, AnyUrl, BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import PydanticBaseSettingsSource
+from typing_extensions import Annotated
 
 from bingqilin.conf.sources import IniSettingsSource, YamlSettingsSource
 from bingqilin.db import validate_databases
@@ -188,7 +189,9 @@ class ConfigModel(BaseSettings):
     )
     # The `DBConfigType` type will be replaced with the injected schema of all registered
     # database config models in the OpenAPI schema
-    databases: AttrKeysDict[str, Union[dict, DBConfigType]] = Field(  # type: ignore
+    databases: Annotated[
+        AttrKeysDict[str, Union[dict, DBConfigType]], AfterValidator(validate_databases)
+    ] = Field(  # type: ignore
         default=AttrKeysDict(),
         description="Configuration for database connections. "
         "Each database is mapped by a string name to a DBConfig (or subclass) instance "
@@ -197,10 +200,6 @@ class ConfigModel(BaseSettings):
     )
 
     fastapi: FastAPIConfig = FastAPIConfig()
-
-    @validator("databases")
-    def validate_databases(cls, databases):
-        return validate_databases(databases)
 
     @classmethod
     def settings_customise_sources(
