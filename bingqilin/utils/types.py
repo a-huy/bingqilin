@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-from typing import Any, Callable, Dict, MutableMapping, Optional, Self
+from typing import Any, Callable, Dict, MutableMapping, Optional
 
 from pydantic._internal._validators import import_string
 from pydantic_core import core_schema
@@ -37,12 +37,12 @@ class RegistryMeta(ABCMeta):
     root_class: str
 
     def __new__(
-        __mcls: type[Self],
+        __mcls: type["RegistryMeta"],
         __name: str,
         __bases: tuple[type, ...],
         __namespace: dict[str, Any],
         **kwargs: Any,
-    ) -> Self:
+    ) -> "RegistryMeta":
         if not __mcls._get_root_class_literal():
             raise ValueError(
                 'This registry metaclass must have a "root_class" class attribute that is '
@@ -106,7 +106,7 @@ class RegistryMeta(ABCMeta):
 
 
 class AttrKeysDict(dict):
-    """This is a thin wrapper around a dict that enables accessing keys as attributes."""
+    """This is a Pydantic type based on a dict that enables accessing keys as attributes."""
 
     def __getattribute__(self, __name: str) -> Any:
         try:

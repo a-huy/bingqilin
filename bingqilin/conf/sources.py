@@ -1,6 +1,6 @@
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Self, Type, Union
+from typing import Any, Dict, List, Optional, Self, Type, Union
 
 from pydantic import BaseModel, ConfigDict, create_model
 from pydantic.fields import FieldInfo
