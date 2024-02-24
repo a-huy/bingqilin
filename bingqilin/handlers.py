@@ -10,9 +10,14 @@ logger = bq_logger.getChild("handlers")
 
 
 async def log_validation_exception(request: Request, exc: RequestValidationError):
-    logger.error(
-        "Validation error: BODY: %s, ERRORS: %s", json.dumps(exc.body), exc.errors()
-    )
+    _body = exc.body
+    try:
+        _body = json.dumps(exc.body)
+    except ValueError:
+        logger.warning(
+            "Could not dump request body for validation error: %s", type(_body)
+        )
+    logger.error("Validation error: BODY: %s, ERRORS: %s", _body, exc.errors())
     return await request_validation_exception_handler(request, exc)
 
 

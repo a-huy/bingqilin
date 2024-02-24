@@ -55,10 +55,6 @@ async def log_validation_exception(request: Request, exc: RequestValidationError
     return await request_validation_exception_handler(request, exc)
 
 
-def add_log_validation_exception_handler(app: FastAPI):
-    app.exception_handler(RequestValidationError)(log_validation_exception)
-
-
 async def reconfigure_handler():
     dispatcher.dispatch_handlers(RECONFIGURE_SIGNAL)
     return {}
