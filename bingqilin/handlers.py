@@ -13,7 +13,7 @@ async def log_validation_exception(request: Request, exc: RequestValidationError
     _body = exc.body
     try:
         _body = json.dumps(exc.body)
-    except ValueError:
+    except TypeError:
         logger.warning(
             "Could not dump request body for validation error: %s", type(_body)
         )
