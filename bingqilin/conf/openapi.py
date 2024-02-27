@@ -53,9 +53,9 @@ def add_config_model_to_openapi(
             )
         else:
             openapi_schema["components"]["schemas"][
-                settings_data.__name__
+                settings_data.__class__.__name__
             ] = settings_data.model_json_schema(
-                ref_template=f"#/components/schemas/{settings_data.__name__}/$defs/"
+                ref_template=f"#/components/schemas/{settings_data.__class__.__name__}/$defs/"
                 + "{model}"
             )
 
@@ -120,7 +120,7 @@ def inject_registry_models_to_openapi(
 ):
     if components := openapi_schema.get("components"):
         if schemas := components.get("schemas"):
-            config_model_name = settings_data.__name__
+            config_model_name = settings_data.__class__.__name__
             if config_schema := schemas.get(config_model_name):
                 if defs := config_schema.get("$defs"):
                     _inject_config_schemas(
