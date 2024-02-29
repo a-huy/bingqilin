@@ -1,8 +1,8 @@
 import json
-from typing import Any, Literal, Optional, Type
+from typing import Any, Literal, Optional, Type, Union
 
 from botocore.exceptions import ClientError
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 from pydantic.fields import FieldInfo
 from pydantic_settings.main import BaseSettings
 
@@ -79,36 +79,61 @@ class AWSSystemsManagerParamsSource(BaseAWSSettingsSource):
 
         model_config = ConfigDict(title="AWSSSMSourceConfig")
 
-    def get_field_value(
-        self, field: FieldInfo, field_name: str
-    ) -> tuple[Any, str, bool]:
+    def get_param_value(
+        self, field_info: FieldInfo, field_name: str
+    ) -> Union[str, None]:
         if not (
-            isinstance(field.json_schema_extra, dict)
-            and AWS_FIELD_EXTRA_NAMESPACE in field.json_schema_extra
+            isinstance(field_info.json_schema_extra, dict)
+            and AWS_FIELD_EXTRA_NAMESPACE in field_info.json_schema_extra
         ):
-            return None, field_name, False
+            return None
 
-        aws_extra = field.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
-        if aws_extra.get("service") != self.AWS_SERVICE:
-            return None, field_name, False
+        param_info = field_info.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
 
-        if arn := aws_extra.get("arn"):
+        if param_info.get("service") != self.AWS_SERVICE:
+            return None
+
+        if arn := param_info.get("arn"):
             _param_id = arn
-        elif param_name := aws_extra.get("param_name"):
+        elif param_name := param_info.get("param_name"):
             _param_id = param_name
-        elif aws_extra.get("env_var_format"):
+        elif param_info.get("env_var_format"):
             _param_id = field_name.upper()
         else:
             _param_id = field_name
 
         try:
-            client = self.get_region_client(aws_extra.get("region"))
+            client = self.get_region_client(param_info.get("region"))
             result = client.get_parameter(Name=_param_id, WithDecryption=True)
         except ClientError:
-            return None, field_name, False
+            return None
         else:
-            value = result["Parameter"]["Value"]
-            return value, field_name, False
+            return result["Parameter"]["Value"]
+
+    def get_params_from_model(self, model_cls: Type[BaseModel]) -> Union[dict, None]:
+        values = {}
+        for field_name in model_cls.model_fields:
+            info = model_cls.model_fields[field_name]
+
+            if info.annotation and isinstance(info.annotation, type(BaseModel)):
+                values[field_name] = self.get_params_from_model(info.annotation)
+
+            param_value = self.get_param_value(info, field_name)
+            if param_value is not None:
+                values[field_name] = param_value
+
+        if not values:
+            values = None
+
+        return values
+
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> tuple[Any, str, bool]:
+        if field.annotation and isinstance(field.annotation, type(BaseModel)):
+            return self.get_params_from_model(field.annotation), field_name, False
+
+        return self.get_param_value(field, field_name), field_name, False
 
 
 class AWSSecretsManagerSource(BaseAWSSettingsSource):
@@ -123,37 +148,59 @@ class AWSSecretsManagerSource(BaseAWSSettingsSource):
 
         model_config = ConfigDict(title="AWSSecretsManagerSourceConfig")
 
-    def get_field_value(
-        self, field: FieldInfo, field_name: str
-    ) -> tuple[Any, str, bool]:
+    def get_secret_value(self, field_info: FieldInfo, field_name: str):
         if not (
-            isinstance(field.json_schema_extra, dict)
-            and AWS_FIELD_EXTRA_NAMESPACE in field.json_schema_extra
+            isinstance(field_info.json_schema_extra, dict)
+            and AWS_FIELD_EXTRA_NAMESPACE in field_info.json_schema_extra
         ):
-            return None, field_name, False
+            return None
 
-        aws_extra = field.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
+        aws_extra = field_info.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
         if aws_extra.get("service") != self.AWS_SERVICE:
-            return None, field_name, False
+            return None
 
         if arn := aws_extra.get("arn"):
-            _param_id = arn
+            _secret_id = arn
         elif secret_name := aws_extra.get("secret_name"):
-            _param_id = secret_name
+            _secret_id = secret_name
         elif aws_extra.get("env_var_format"):
-            _param_id = field_name.upper()
+            _secret_id = field_name.upper()
         else:
-            _param_id = field_name
+            _secret_id = field_name
 
         try:
             client = self.get_region_client(aws_extra.get("region"))
-            result = client.get_secret_value(SecretId=_param_id)
+            result = client.get_secret_value(SecretId=_secret_id)
         except ClientError:
-            return None, field_name, False
+            return None
         else:
             value = result["SecretString"]
             try:
-                json_obj = json.loads(value)
-                return json_obj, field_name, True
+                return json.loads(value)
             except ValueError:
-                return value, field_name, False
+                return value
+
+    def get_secrets_from_model(self, model_cls: Type[BaseModel]) -> Union[dict, None]:
+        values = {}
+        for field_name in model_cls.model_fields:
+            info = model_cls.model_fields[field_name]
+
+            if info.annotation and isinstance(info.annotation, type(BaseModel)):
+                values[field_name] = self.get_secrets_from_model(info.annotation)
+
+            secret_value = self.get_secret_value(info, field_name)
+            if secret_value is not None:
+                values[field_name] = secret_value
+
+        if not values:
+            values = None
+
+        return values
+
+    def get_field_value(
+        self, field: FieldInfo, field_name: str
+    ) -> tuple[Any, str, bool]:
+        if field.annotation and isinstance(field.annotation, type(BaseModel)):
+            return self.get_secrets_from_model(field.annotation), field_name, False
+
+        return self.get_secret_value(field, field_name), field_name, False
