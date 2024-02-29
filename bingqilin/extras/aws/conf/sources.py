@@ -94,6 +94,8 @@ class AWSSystemsManagerParamsSource(BaseAWSSettingsSource):
 
         if arn := aws_extra.get("arn"):
             _param_id = arn
+        elif param_name := aws_extra.get("param_name"):
+            _param_id = param_name
         elif aws_extra.get("env_var_format"):
             _param_id = field_name.upper()
         else:

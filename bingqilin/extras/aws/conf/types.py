@@ -120,6 +120,7 @@ class ARN:
 
 def SSMParameterField(
     arn: Optional[str] = None,
+    param_name: Optional[str] = None,
     env_var_format: bool = True,
     region: Optional[str] = None,
     account_id: Optional[str] = None,
@@ -132,6 +133,7 @@ def SSMParameterField(
             AWS_FIELD_EXTRA_NAMESPACE: {
                 "service": AWS_SSM_SERVICE,
                 "arn": arn,
+                "param_name": param_name,
                 "env_var_format": env_var_format,
                 "region": region,
                 "account_id": account_id,
