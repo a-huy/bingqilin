@@ -202,6 +202,24 @@ class ConfigModel(BaseSettings):
     fastapi: FastAPIConfig = FastAPIConfig()
 
     @classmethod
+    def add_settings_sources(
+        cls, settings_cls: type[BaseSettings]
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """
+        This classmethod is intended to be overridden and implemented by subclasses.
+
+        The settings sources instances returned here will be appended to the end
+        of the `settings_customise_sources()` list, giving them the highest precedence.
+
+        Args:
+            settings_cls (type[BaseSettings]): settings class
+
+        Returns:
+            tuple[PydanticBaseSettingsSource, ...]: A tuple of initialized settings sources
+        """
+        return tuple()
+
+    @classmethod
     def settings_customise_sources(
         cls,
         settings_cls: type[BaseSettings],
@@ -217,4 +235,4 @@ class ConfigModel(BaseSettings):
             file_secret_settings,
             YamlSettingsSource(settings_cls),
             IniSettingsSource(settings_cls),
-        )
+        ) + (cls.add_settings_sources(settings_cls) or tuple())
