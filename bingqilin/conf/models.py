@@ -29,14 +29,17 @@ class FastAPILicenseInfo(BaseModel):
 
 class FastAPIContact(BaseModel):
     name: str = Field(
-        description="The identifying name of the contact person/organization."
+        default="",
+        description="The identifying name of the contact person/organization.",
     )
     url: AnyUrl = Field(
-        description="The URL pointing to the contact Information. MUST be in the format of a URL."
+        default="",
+        description="The URL pointing to the contact Information. MUST be in the format of a URL.",
     )
     email: str = Field(
+        default="",
         description="The email address of the contact person/organization. "
-        "MUST be in the format of an email address."
+        "MUST be in the format of an email address.",
     )
 
 
