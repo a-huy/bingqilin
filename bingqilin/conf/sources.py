@@ -14,8 +14,11 @@ from pydantic_settings.main import BaseSettings
 from pydantic_settings.sources import ENV_FILE_SENTINEL, DotenvType
 from typing_extensions import Literal
 
+from bingqilin.logger import bq_logger
 from bingqilin.utils.dict import merge
 from bingqilin.utils.types import RegistryMeta, get_annotation_literal_value
+
+logger = bq_logger.getChild("conf.sources")
 
 SETTINGS_SOURCES: Dict[str, Type["BingqilinSettingsSource"]] = {}
 
@@ -165,6 +168,7 @@ class YamlSettingsSource(BingqilinSettingsSource):
             for filename in self.files:
                 configs.append(self._load_file(filename))
         except (ModuleNotFoundError, ImportError):
+            logger.warning("YamlSettingsSource: file name %s not found.", filename)
             raise MissingDependencyError(self)
 
         self.loaded_config = merge({}, *configs)
@@ -172,8 +176,11 @@ class YamlSettingsSource(BingqilinSettingsSource):
     def _load_file(self, file_name: FilePath) -> dict:
         import yaml
 
-        with open(file_name, "r") as yaml_file:
-            return yaml.safe_load(yaml_file)
+        try:
+            with open(file_name, "r") as yaml_file:
+                return yaml.safe_load(yaml_file)
+        except FileNotFoundError:
+            return {}
 
     def get_field_value(
         self, field: FieldInfo, field_name: str
