@@ -2,10 +2,6 @@ from pydantic import BaseModel
 from bingqilin.extras.aws.conf.types import ARN
 from tests.common import BaseTestCase
 
-from unittest import TestCase
-
-TestCase.assertRaises
-
 
 class TestARN(BaseTestCase):
     def test_simple_arn(self):

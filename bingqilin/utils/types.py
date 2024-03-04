@@ -1,10 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from functools import reduce
-from typing import Any, Callable, Dict, MutableMapping, Optional
+from typing import Any, Callable, Dict, List, MutableMapping, Optional
 
+from pydantic import SerializerFunctionWrapHandler
 from pydantic._internal._validators import import_string
+from pydantic.functional_serializers import WrapSerializer
+from pydantic.functional_validators import AfterValidator
 from pydantic_core import core_schema
-from typing_extensions import get_args
+from typing_extensions import Annotated, get_args
 
 
 def get_annotation_literal_value(obj, attr_name):
@@ -137,3 +140,18 @@ class AttrKeysDict(dict):
 
     def items(self):
         return dict(self).items()
+
+
+def validate_csv_line(value: str) -> List[str]:
+    return [v.strip() for v in value.split(",")]
+
+
+def serialize_csv_line(value: List[str], next: SerializerFunctionWrapHandler) -> str:
+    return next(",".join(value))
+
+
+CSVLine = Annotated[
+    str,
+    AfterValidator(validate_csv_line),
+    WrapSerializer(func=serialize_csv_line),
+]
