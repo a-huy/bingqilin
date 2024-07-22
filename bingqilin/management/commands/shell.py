@@ -3,6 +3,9 @@ import select
 import sys
 import traceback
 
+from rich.padding import Padding
+from rich.panel import Panel
+from rich.markdown import Markdown
 import typer
 
 from enum import Enum
@@ -25,8 +28,8 @@ class Command(BaseCommand):
         validated = []
         if not init_scripts:
             init_scripts = [
-                "{}{}_init_shell.py".format(
-                    get_resource_file_for_module("bingqilin.management.commands"),
+                "{}{}init_shell.py".format(
+                    get_resource_file_for_module("bingqilin.management"),
                     os.path.sep,
                 )
             ]
@@ -37,6 +40,22 @@ class Command(BaseCommand):
             validated.append(_script)
 
         return validated
+
+    def print_init_scripts(self, init_scripts):
+        if not init_scripts:
+            return
+
+        title = "[b green]Found init scripts[/b green]"
+        panel = Padding(
+            Panel(
+                "\n".join([f"🐍 {fname}" for fname in init_scripts]),
+                title=title,
+                expand=False,
+                padding=(1, 2),
+            ),
+            1,
+        )
+        self.rprint(panel)
 
     def exec_init_scripts(self, init_scripts) -> Dict[str, Any]:
         # Set up a dictionary to serve as the environment for the shell.
@@ -160,7 +179,11 @@ class Command(BaseCommand):
 
         available_shells = [interface] if interface else list(Shell)
 
-        init_scripts = self.validate_init_scripts(init)
+        if startup:
+            init_scripts = self.validate_init_scripts(init)
+            self.print_init_scripts(init_scripts)
+        else:
+            init_scripts = []
 
         for shell in available_shells:
             try:

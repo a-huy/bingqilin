@@ -1,11 +1,10 @@
 import importlib.resources
+import logging
 import os
 import pkgutil
-import rich
 from typing import Optional
 
 import importlib
-import pkg_resources
 import typer
 
 from bingqilin.conf import SettingsManager
@@ -18,6 +17,9 @@ from .base import (
     default_callback,
 )
 from .context import ManagementContextObj
+
+
+logger = logging.getLogger(__name__)
 
 
 COMMANDS_IGNORE_PREFIX = "_"
@@ -137,7 +139,7 @@ class ManagementUtility:
         try:
             cmd_dir = get_resource_file_for_module(cmd_module)
         except ModuleNotFoundError:
-            rich.print(
+            logger.warning(
                 f'[yellow]Could not load module "{cmd_module}", skipping.[/yellow]'
             )
             return
@@ -174,7 +176,7 @@ class ManagementUtility:
             elif isinstance(item, tuple):
                 cmd_module, group_name = item
                 if group_name in existing_groups:
-                    rich.print(
+                    logger.warning(
                         f'[yellow]Additional commands module "{cmd_module}" is specified with '
                         f'the group name "{group_name}", and will override already loaded '
                         "commands.[/yellow]",
