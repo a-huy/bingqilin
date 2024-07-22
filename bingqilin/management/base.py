@@ -1,13 +1,14 @@
 import logging
-import rich
 import sys
 from typing import Optional
 
 import typer
-
 from typer.core import TyperGroup
 
-from .context import ManagementContextObj, ManagementCommandConfig
+from .context import ManagementCommandConfig, ManagementContextObj
+from .utils import log_panel
+
+logger = logging.getLogger(__name__)
 
 
 def get_command_class_from_handler(handler_method):
@@ -35,12 +36,14 @@ def commands_group_callback(ctx: typer.Context):
         return
 
     if command_config.require_app_config and not ctx_obj.config:
-        raise CommandError(
+        log_panel(
             f'The command "{ctx.invoked_subcommand}" requires an application settings instance '
             "to be specified, but one could not be loaded. Define one (using a Python path) "
             f'with either the "{ctx_obj.settings_manager_env_name}" environment variable or the '
-            '"ConfigModel.management_settings" field.'
+            '"ConfigModel.management_settings" field.',
+            level="error",
         )
+        raise typer.Exit(code=1)
 
     if isinstance(ctx.command, TyperGroup):
         cmd_cb = ctx.command.commands[ctx.invoked_subcommand].callback
@@ -49,10 +52,6 @@ def commands_group_callback(ctx: typer.Context):
 
 
 def commands_group_result_callback(result):
-    pass
-
-
-class CommandError(Exception):
     pass
 
 
@@ -86,12 +85,6 @@ class BaseCommand:
 
     def get_management_config(self):
         return ManagementCommandConfig(require_app_config=self.require_app_config)
-
-    def rprint(self, text):
-        """
-        Convenience function for rich printing.
-        """
-        rich.print(text)
 
     # Optional methods
     #

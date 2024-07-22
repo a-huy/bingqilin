@@ -1,20 +1,23 @@
+from ast import Import
+import logging
 import os
 import select
 import sys
 import traceback
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
+import rich
+import typer
 from rich.padding import Padding
 from rich.panel import Panel
-from rich.markdown import Markdown
-import typer
-
-from enum import Enum
-from typing import Optional, List, Dict, Any
+from typer import Option
 from typing_extensions import Annotated
 
-from typer import Option
+from bingqilin.management import BaseCommand, get_resource_file_for_module
+from bingqilin.management.utils import log_panel
 
-from bingqilin.management import BaseCommand, CommandError, get_resource_file_for_module
+logger = logging.getLogger(__name__)
 
 
 class Shell(str, Enum):
@@ -55,7 +58,7 @@ class Command(BaseCommand):
             ),
             1,
         )
-        self.rprint(panel)
+        rich.print(panel)
 
     def exec_init_scripts(self, init_scripts) -> Dict[str, Any]:
         # Set up a dictionary to serve as the environment for the shell.
@@ -190,4 +193,8 @@ class Command(BaseCommand):
                 return getattr(self, shell)(startup=startup, init_scripts=init_scripts)
             except ImportError:
                 pass
-        raise CommandError("Couldn't import {} interface.".format(shell))
+
+        log_panel(
+            'Couldn\'t import the "{}" interface.'.format(shell.value), level="error"
+        )
+        raise typer.Exit(code=1)
