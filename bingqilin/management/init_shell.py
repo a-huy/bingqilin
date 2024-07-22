@@ -1,10 +1,8 @@
-import logging
-import rich
+from rich import print, print_json
 
 from bingqilin.management import get_app_settings
-
-logger = logging.getLogger("default-init-script")
+from bingqilin.management.utils import log_panel
 
 settings = get_app_settings()
 
-rich.print("[blue]Bingqilin app settings loaded![/blue]")
+log_panel("[blue]Bingqilin app settings loaded![/blue]", level="info", expand=False)
