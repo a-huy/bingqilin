@@ -196,7 +196,7 @@ class ConfigModel(BaseSettings):
     # The `DBConfigType` type will be replaced with the injected schema of all registered
     # database config models in the OpenAPI schema
     databases: Annotated[
-        AttrKeysDict[str, Union[dict, DBConfigType]], AfterValidator(validate_databases)
+        AttrKeysDict[str, Union[dict, DBConfigType]], AfterValidator(validate_databases)  # type: ignore
     ] = Field(  # type: ignore
         default=AttrKeysDict(),
         description="Configuration for database connections. "

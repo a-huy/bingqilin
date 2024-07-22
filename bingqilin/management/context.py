@@ -14,6 +14,6 @@ class ManagementCommandConfig:
 @dataclass
 class ManagementContextObj:
     settings_manager_env_name: str
-    config: Optional[ConfigModelType] = None
+    config: Optional[ConfigModelType] = None  # type: ignore
     loglevel: int = logging.INFO
     command_config: Dict[str, ManagementCommandConfig] = field(default_factory=dict)

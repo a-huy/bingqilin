@@ -3,13 +3,15 @@ import select
 import sys
 import traceback
 
+import typer
+
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from typing_extensions import Annotated
 
 from typer import Option
 
-from bingqilin.management import BaseCommand, CommandError
+from bingqilin.management import BaseCommand, CommandError, get_resource_file_for_module
 
 
 class Shell(str, Enum):
@@ -19,41 +21,72 @@ class Shell(str, Enum):
 
 
 class Command(BaseCommand):
-    def ipython(self, **options):
-        from IPython import start_ipython
+    def validate_init_scripts(self, init_scripts) -> List[str]:
+        validated = []
+        if not init_scripts:
+            init_scripts = [
+                "{}{}_init_shell.py".format(
+                    get_resource_file_for_module("bingqilin.management.commands"),
+                    os.path.sep,
+                )
+            ]
 
-        start_ipython(argv=[])
+        for _script in init_scripts:
+            if not os.path.isfile(_script):
+                continue
+            validated.append(_script)
+
+        return validated
+
+    def exec_init_scripts(self, init_scripts) -> Dict[str, Any]:
+        # Set up a dictionary to serve as the environment for the shell.
+        imported_objects = {}
+
+        for _script in init_scripts:
+            if not _script:
+                continue
+            if not os.path.isfile(_script):
+                continue
+            with open(_script) as handle:
+                pythonrc_code = handle.read()
+            # Match the behavior of the cpython shell where an error in
+            # PYTHONSTARTUP prints an exception and continues.
+            try:
+                exec(compile(pythonrc_code, _script, "exec"), imported_objects)
+            except Exception:
+                traceback.print_exc()
+
+        return imported_objects
+
+    def ipython(self, **options):
+        from IPython.terminal.ipapp import TerminalIPythonApp
+
+        app = TerminalIPythonApp()
+        app.initialize([])
+        if init_scripts := options.get("init_scripts"):
+            for fname in init_scripts:
+                app._exec_file(fname)
+        app.start()
 
     def bpython(self, **options):
         import bpython
 
-        bpython.embed()
+        init_scripts = [
+            os.environ.get("PYTHONSTARTUP"),
+            os.path.expanduser("~/.pythonrc.py"),
+        ] + (options.get("init_scripts") or [])
+        imported_objects = self.exec_init_scripts(init_scripts)
+
+        bpython.embed(locals_=imported_objects)
 
     def python(self, **options):
         import code
 
-        # Set up a dictionary to serve as the environment for the shell.
-        imported_objects = {}
-
-        # We want to honor both $PYTHONSTARTUP and .pythonrc.py, so follow system
-        # conventions and get $PYTHONSTARTUP first then .pythonrc.py.
-        if options["startup"]:
-            for pythonrc in [
-                os.environ.get("PYTHONSTARTUP"),
-                os.path.expanduser("~/.pythonrc.py"),
-            ]:
-                if not pythonrc:
-                    continue
-                if not os.path.isfile(pythonrc):
-                    continue
-                with open(pythonrc) as handle:
-                    pythonrc_code = handle.read()
-                # Match the behavior of the cpython shell where an error in
-                # PYTHONSTARTUP prints an exception and continues.
-                try:
-                    exec(compile(pythonrc_code, pythonrc, "exec"), imported_objects)
-                except Exception:
-                    traceback.print_exc()
+        init_scripts = [
+            os.environ.get("PYTHONSTARTUP"),
+            os.path.expanduser("~/.pythonrc.py"),
+        ] + (options.get("init_scripts") or [])
+        imported_objects = self.exec_init_scripts(init_scripts)
 
         # By default, this will set up readline to do tab completion and to read and
         # write history to the .python_history file, but this can be overridden by
@@ -92,10 +125,17 @@ class Command(BaseCommand):
         startup: Annotated[
             bool,
             Option(
-                help="Tell the shell to run a PYTHONSTARTUP and ~/.pythonrc.py scripts. "
+                help="Tell the shell to run PYTHONSTARTUP and ~/.pythonrc.py scripts. "
                 "Only affects the plain Python interpreter."
             ),
         ] = True,
+        init: Annotated[
+            Optional[List[str]],
+            typer.Option(
+                help="Specify one or more scripts (specified as file paths) to load "
+                "before starting the shell."
+            ),
+        ] = None,
         interface: Annotated[
             Optional[Shell],
             Option(help="Specify an interactive interpreter interface."),
@@ -120,9 +160,11 @@ class Command(BaseCommand):
 
         available_shells = [interface] if interface else list(Shell)
 
+        init_scripts = self.validate_init_scripts(init)
+
         for shell in available_shells:
             try:
-                return getattr(self, shell)(startup=startup)
+                return getattr(self, shell)(startup=startup, init_scripts=init_scripts)
             except ImportError:
                 pass
         raise CommandError("Couldn't import {} interface.".format(shell))

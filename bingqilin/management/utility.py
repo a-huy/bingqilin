@@ -1,3 +1,4 @@
+import importlib.resources
 import os
 import pkgutil
 import rich
@@ -20,6 +21,9 @@ from .context import ManagementContextObj
 
 
 COMMANDS_IGNORE_PREFIX = "_"
+SETTINGS_MANAGER_ENV_NAME = "BINGQILIN_SETTINGS"
+CORE_COMMANDS_MODULE = "bingqilin.management.commands"
+CORE_COMMANDS_GROUP_NAME = "core"
 
 
 def _commands_in_directory(root_directory, current_directory):
@@ -46,13 +50,8 @@ def _commands_in_directory(root_directory, current_directory):
     return commands
 
 
-def _get_resource_file_for_module(module_path: str):
-    parts = module_path.rsplit(".", 1)
-    if len(parts) >= 2:
-        path, _mod = parts
-    else:
-        path, _mod = parts[0], ""
-    return pkg_resources.resource_filename(path, _mod)
+def get_resource_file_for_module(module_path: str):
+    return str(importlib.resources.files(module_path))
 
 
 def find_commands(commands_root_dir):
@@ -64,60 +63,61 @@ def find_commands(commands_root_dir):
     return _commands_in_directory(commands_root_dir, commands_root_dir)
 
 
-class ManagementUtility:
-    SETTINGS_MANAGER_ENV_NAME = "BINGQILIN_SETTINGS"
-    CORE_COMMANDS_MODULE = "bingqilin.management.commands"
-    CORE_COMMANDS_GROUP_NAME = "core"
+def get_settings_from_default():
+    from bingqilin.conf import ConfigModel, SettingsManager
 
+    class _T_Settings(SettingsManager):
+        data: ConfigModel
+
+    _settings = _T_Settings().load(_env_file=".env")
+    return _settings.data.management_settings
+
+
+def get_app_settings():
+    settings_path = (
+        os.environ.get(SETTINGS_MANAGER_ENV_NAME) or get_settings_from_default()
+    )
+    if not settings_path:
+        return None
+
+    try:
+        settings_module, settings_attr = settings_path.split(":")
+        mod = importlib.import_module(settings_module)
+
+        attr_vals = settings_attr.split(".")
+        val = mod
+        while attr_vals:
+            val = getattr(val, attr_vals[0])
+            attr_vals = attr_vals[1:]
+    except (ImportError, AttributeError):
+        raise RuntimeError(
+            f'Could not import the settings manager class from "{settings_path}".'
+        )
+
+    if not (val and isinstance(val, SettingsManager)):
+        raise RuntimeError(
+            f'The value of {settings_path} is not an instance of "SettingsManager" '
+            f"(expected: SettingsManager, got: {type(val)})"
+        )
+
+    return val
+
+
+class ManagementUtility:
     def __init__(self) -> None:
         self.app_config = self.get_app_config()
         self.ctx_obj = ManagementContextObj(
             config=self.app_config,
-            settings_manager_env_name=self.SETTINGS_MANAGER_ENV_NAME,
+            settings_manager_env_name=SETTINGS_MANAGER_ENV_NAME,
         )
         self.typer = typer.Typer(
             context_settings={"obj": self.ctx_obj},
             callback=default_callback,
         )
 
-    def get_settings_from_default(self):
-        from bingqilin.conf import ConfigModel, SettingsManager
-
-        class _T_Settings(SettingsManager):
-            data: ConfigModel
-
-        _settings = _T_Settings().load(_env_file=".env")
-        return _settings.data.management_settings
-
     def get_app_config(self) -> Optional[ConfigModel]:
-        settings_path = (
-            os.environ.get(self.SETTINGS_MANAGER_ENV_NAME)
-            or self.get_settings_from_default()
-        )
-        if not settings_path:
-            return None
-
-        try:
-            settings_module, settings_attr = settings_path.split(":")
-            mod = importlib.import_module(settings_module)
-
-            attr_vals = settings_attr.split(".")
-            val = mod
-            while attr_vals:
-                val = getattr(val, attr_vals[0])
-                attr_vals = attr_vals[1:]
-        except (ImportError, AttributeError):
-            raise RuntimeError(
-                f'Could not import the settings manager class from "{settings_path}".'
-            )
-
-        if not (val and isinstance(val, SettingsManager)):
-            raise RuntimeError(
-                f'The value of {settings_path} is not an instance of "SettingsManager" '
-                f"(expected: SettingsManager, got: {type(val)})"
-            )
-
-        return val.data
+        if val := get_app_settings():
+            return val.data
 
     def load_command(self, base_module, command_name, typer_app=None):
         cmd_mod = importlib.import_module(".".join([base_module, command_name]))
@@ -135,7 +135,7 @@ class ManagementUtility:
             group_name = "app"
 
         try:
-            cmd_dir = _get_resource_file_for_module(cmd_module)
+            cmd_dir = get_resource_file_for_module(cmd_module)
         except ModuleNotFoundError:
             rich.print(
                 f'[yellow]Could not load module "{cmd_module}", skipping.[/yellow]'
@@ -163,7 +163,7 @@ class ManagementUtility:
             self.app_config.management_additional_commands if self.app_config else []
         )
         cmd_modules = [
-            (self.CORE_COMMANDS_MODULE, self.CORE_COMMANDS_GROUP_NAME)
+            (CORE_COMMANDS_MODULE, CORE_COMMANDS_GROUP_NAME)
         ] + additional_commands
 
         existing_groups = set()
