@@ -1,6 +1,6 @@
 from .base import BaseCommand
 from .logging import setup_logging
-from .utility import ManagementUtility, get_app_settings, get_resource_file_for_module
+from .cli import ManagementUtility, get_app_settings, get_resource_file_for_module
 
 
 setup_logging()
