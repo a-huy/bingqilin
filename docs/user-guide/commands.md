@@ -147,3 +147,11 @@ bingqilin scripts dump_settings
   }
 }
 ```
+
+## Core commands
+
+Bingqilin has the following builtin commands under the `core` group:
+
+### `shell`
+
+This opens up an interactive Python shell and has support for you to specify multiple initialization scripts (on top of using `PYTHONSTARTUP` and `pythonrc.py`). By default, it will attempt to use any augmented shell you have installed (`ipython` or `bpython`) before defaulting to a basic Python interpreter.
