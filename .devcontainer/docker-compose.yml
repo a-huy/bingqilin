@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  devcontainer:
+    image: "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm"
+    networks:
+      - bingqilin
+    volumes:
+      - ..:/workspaces/bingqilin:cached
+    command: sleep infinity
+
+networks:
+  bingqilin:

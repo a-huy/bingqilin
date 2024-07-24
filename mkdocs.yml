@@ -39,6 +39,7 @@ nav:
     - Setup: "user-guide/setup.md"
     - Settings and ConfigModel: "user-guide/configuration.md"
     - Contexts: "user-guide/contexts.md"
+    - Commands: "user-guide/commands.md"
   - Extras:
     - AWS: "extras/aws.md"
 

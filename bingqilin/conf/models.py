@@ -1,4 +1,6 @@
-from typing import Any, Optional, Sequence, TypeVar, Union
+import logging
+
+from typing import Any, Optional, Sequence, TypeVar, Union, List, Tuple
 
 from fastapi import FastAPI
 from pydantic import AfterValidator, AnyUrl, BaseModel, Field
@@ -162,6 +164,7 @@ class ConfigModel(BaseSettings):
         default=True,
         description="Toggles debug features (do not enable in production!)",
     )
+    loglevel: int = Field(default=logging.INFO, description="Default logging level")
     add_config_model_schema: bool = Field(
         default=True,
         description="Add the loaded config model schema to the OpenAPI spec as well as the docs.",
@@ -193,13 +196,26 @@ class ConfigModel(BaseSettings):
     # The `DBConfigType` type will be replaced with the injected schema of all registered
     # database config models in the OpenAPI schema
     databases: Annotated[
-        AttrKeysDict[str, Union[dict, DBConfigType]], AfterValidator(validate_databases)
+        AttrKeysDict[str, Union[dict, DBConfigType]], AfterValidator(validate_databases)  # type: ignore
     ] = Field(  # type: ignore
         default=AttrKeysDict(),
         description="Configuration for database connections. "
         "Each database is mapped by a string name to a DBConfig (or subclass) instance "
         "or a dict. If the config is an instance of DBConfig, then an attempt is made to "
         "initialize the client.",
+    )
+
+    # NOTE: These management config fields aren't put into their own model, because by default,
+    # the user has no way to pass in any delimiter options when invoking core commands.
+    # These fields must live in the top level config model.
+    management_settings: Optional[str] = Field(
+        default=None,
+        description="A string using Python path syntax that points to the "
+        "application-specific settings instance. This is used for management utility scripts.",
+    )
+    management_additional_commands: List[Union[str, Tuple[str, str]]] = Field(
+        default=list(),
+        description="A list of Python module paths where additional commands can be found.",
     )
 
     fastapi: FastAPIConfig = FastAPIConfig()
@@ -239,3 +255,6 @@ class ConfigModel(BaseSettings):
             YamlSettingsSource(settings_cls),
             IniSettingsSource(settings_cls),
         ) + (cls.add_settings_sources(settings_cls) or tuple())
+
+
+ConfigModelType = TypeVar("ConfigModelType", bound=ConfigModel)
