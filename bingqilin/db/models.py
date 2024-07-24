@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
-from pydantic import BaseModel, Field, model_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic._internal._model_construction import ModelMetaclass
 
 from bingqilin.utils.types import RegistryMeta
@@ -43,7 +43,7 @@ class DBConfig(BaseModel, metaclass=DBConfigMeta):
         properties = schema["properties"]
         return properties["type"]["const"]
 
-    model_config = ConfigDict(extra='allow')
+    model_config = ConfigDict(extra="allow")
 
 
 class SQLAlchemyDBConfig(DBConfig):
@@ -52,7 +52,7 @@ class SQLAlchemyDBConfig(DBConfig):
     engine: Optional[str] = None
     dialect: Optional[str] = None
     user: Optional[str] = None
-    password: Optional[str] = None
+    password: Optional[SecretStr] = None
     database: Optional[str] = None
     query: Mapping[str, Union[Sequence[str], str]] = {}
 
@@ -73,7 +73,7 @@ class SQLAlchemyDBConfig(DBConfig):
         return URL.create(
             f"{self.engine}{'+' + self.dialect if self.dialect else ''}",
             username=self.user,
-            password=self.password,
+            password=self.password.get_secret_value() if self.password else None,
             host=self.host,
             port=self.port,
             database=self.database,
@@ -99,7 +99,7 @@ class RedisDBConfig(DBConfig):
     port: int = Field(default=6379)
     db: int = Field(default=0)
     username: Optional[str] = Field(default=None)
-    password: Optional[str] = Field(default=None)
+    password: Optional[SecretStr] = Field(default=None)
 
     # Less common options
     unix_socket_path: Optional[str] = Field(default=None)

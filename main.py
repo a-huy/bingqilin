@@ -14,21 +14,22 @@ from bingqilin.extras.aws.conf.types import SecretsManagerField, SSMParameterFie
 
 
 class AppConfigModel(ConfigModel):
-    test_ssm_field: str = SSMParameterField(
-        # arn="arn:aws:ssm:us-west-2:064614371641:parameter/TEST_SSM_FIELD"
-    )
-    test_secret_field: dict = SecretsManagerField(
-        secret_name="dev/test-field"
-        # arn="arn:aws:secretsmanager:us-west-2:064614371641:secret:dev/test-field-awbO1z"
-    )
+    pass
+    # test_ssm_field: str = SSMParameterField(
+    #     # arn="arn:aws:ssm:us-west-2:064614371641:parameter/TEST_SSM_FIELD"
+    # )
+    # test_secret_field: dict = SecretsManagerField(
+    #     secret_name="dev/test-field"
+    #     # arn="arn:aws:secretsmanager:us-west-2:064614371641:secret:dev/test-field-awbO1z"
+    # )
 
     @classmethod
     def settings_customise_sources(
         cls, settings_cls: type[BaseSettings], *args, **kwargs
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         sources = list(ConfigModel.settings_customise_sources(cls, *args, **kwargs))
-        sources.append(AWSSystemsManagerParamsSource(settings_cls))
-        sources.append(AWSSecretsManagerSource(settings_cls))
+        # sources.append(AWSSystemsManagerParamsSource(settings_cls))
+        # sources.append(AWSSecretsManagerSource(settings_cls))
         return tuple(sources)
 
 

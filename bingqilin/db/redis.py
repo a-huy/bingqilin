@@ -29,8 +29,8 @@ def make_redis_client(
             port=config.port,
             db=config.db,
             username=config.username,
-            password=config.password,
+            password=config.password.get_secret_value() if config.password else None,
             unix_socket_path=config.unix_socket_path,
             ssl=config.ssl,
-            **config.extra_data
+            **config.extra_data,
         )

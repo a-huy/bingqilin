@@ -1,10 +1,10 @@
+import importlib
 import importlib.resources
 import logging
 import os
 import pkgutil
 from typing import Optional
 
-import importlib
 import typer
 
 from bingqilin.conf import SettingsManager
@@ -17,7 +17,6 @@ from .base import (
     default_callback,
 )
 from .context import ManagementContextObj
-
 
 logger = logging.getLogger(__name__)
 
@@ -65,20 +64,25 @@ def find_commands(commands_root_dir):
     return _commands_in_directory(commands_root_dir, commands_root_dir)
 
 
-def get_settings_from_default():
+def get_app_settings_path():
+    if env_value := os.environ.get(SETTINGS_MANAGER_ENV_NAME):
+        return env_value
+
     from bingqilin.conf import ConfigModel, SettingsManager
+    from bingqilin.conf.models import ConfigModelConfigDict
+
+    class _T_Config(ConfigModel):
+        model_config = ConfigModelConfigDict(extra="allow")
 
     class _T_Settings(SettingsManager):
-        data: ConfigModel
+        data: _T_Config
 
     _settings = _T_Settings().load(_env_file=".env")
     return _settings.data.management_settings
 
 
-def get_app_settings():
-    settings_path = (
-        os.environ.get(SETTINGS_MANAGER_ENV_NAME) or get_settings_from_default()
-    )
+def get_app_settings() -> SettingsManager | None:
+    settings_path = get_app_settings_path()
     if not settings_path:
         return None
 
@@ -91,9 +95,14 @@ def get_app_settings():
         while attr_vals:
             val = getattr(val, attr_vals[0])
             attr_vals = attr_vals[1:]
-    except (ImportError, AttributeError):
+    except ImportError:
         raise RuntimeError(
-            f'Could not import the settings manager class from "{settings_path}".'
+            f'Could not import the module "{settings_module}" while getting app settings.'
+        )
+    except AttributeError:
+        raise RuntimeError(
+            f'Could not get attribute "{attr_vals[0]}" from value "{val}" when loading app '
+            "settings."
         )
 
     if not (val and isinstance(val, SettingsManager)):
@@ -103,6 +112,25 @@ def get_app_settings():
         )
 
     return val
+
+
+def get_app_root() -> str | None:
+    settings_path = get_app_settings_path()
+    if not settings_path:
+        return None
+
+    settings_module, _ = settings_path.split(":")
+    try:
+        mod = importlib.import_module(settings_module)
+    except ImportError:
+        raise RuntimeError(
+            f'Could not import the module "{settings_module}" while getting app settings.'
+        )
+
+    mod_file_parts = str(mod.__file__).replace(".py", "").split(os.path.sep)
+    settings_module_parts = settings_module.split(".")
+    root_parts = mod_file_parts[: -len(settings_module_parts)]
+    return os.path.sep.join(root_parts)
 
 
 class ManagementUtility:
@@ -188,8 +216,3 @@ class ManagementUtility:
             self.load_command_group(cmd_module, group_name)
 
         self.typer()
-
-
-def execute_from_command_line():
-    mgmt = ManagementUtility()
-    mgmt.execute()
