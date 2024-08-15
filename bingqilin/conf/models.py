@@ -93,6 +93,10 @@ class FastAPIConfig(BaseModel):
     openapi_tags: Optional[Sequence[OpenAPITag]] = Field(
         default=None, description="A list of metadata for tags used in path operations."
     )
+    # Overriding the OpenAPI version as an init parameter is not allowed by FastAPI.
+    # It is made available here to update it when calling `create_app()`, but it makes
+    # no attempt to ensure that the OpenAPI JSON is compatible with the new version.
+    openapi_version: Optional[str] = None
     servers: Optional[Sequence[FastAPIServer]] = Field(
         default=None,
         description="Specify additional servers in the OpenAPI schema. "
@@ -145,7 +149,10 @@ class FastAPIConfig(BaseModel):
     def create_app(self, **additional_options) -> FastAPI:
         app_options = self.model_dump()
         app_options.update(additional_options)
-        return FastAPI(**app_options)
+        app = FastAPI(**app_options)
+        if self.openapi_version:
+            app.openapi_version = self.openapi_version
+        return app
 
 
 class ConfigModelConfigDict(SettingsConfigDict, total=False):
