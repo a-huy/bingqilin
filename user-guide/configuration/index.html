@@ -624,6 +624,10 @@
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
+<p><code>YamlSettingsSource</code> is deprecated in lieu of <code>pydantic_settings</code>'s <code>YamlConfigSettingsSource</code>, introduced in 2.2.0. It will be removed in a later version.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
 <p>The YAML settings source depends on the <code>pyyaml</code> package to load its files. If you attempt to specify a YAML file via the <code>files</code> keyword argument without it installed, a <code>MissingDependencyError</code> will be raised to inform you about the missing package.</p>
 </div>
 <p>If your settings model does derive from <code>ConfigModel</code>, the <code>fastapi</code> model value (as an instance of <code>bingqilin.conf.models:FastAPIConfig</code>) provides a convenience function to create your app instance:</p>
