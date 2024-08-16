@@ -49,6 +49,9 @@ Underneath the hood, Bingqilin's `ConfigModel` is extending a Pydantic settings'
 * There are boolean fields defined that toggle the various Bingqilin utilities.
 
 !!! warning
+    `YamlSettingsSource` is deprecated in lieu of `pydantic_settings`'s `YamlConfigSettingsSource`, introduced in 2.2.0. It will be removed in a later version.
+
+!!! warning
     The YAML settings source depends on the `pyyaml` package to load its files. If you attempt to specify a YAML file via the `files` keyword argument without it installed, a `MissingDependencyError` will be raised to inform you about the missing package.
 
 If your settings model does derive from `ConfigModel`, the `fastapi` model value (as an instance of `bingqilin.conf.models:FastAPIConfig`) provides a convenience function to create your app instance:
