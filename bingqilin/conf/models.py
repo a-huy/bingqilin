@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import PydanticBaseSettingsSource
 from typing_extensions import Annotated
 
-from bingqilin.conf.sources import IniSettingsSource, YamlSettingsSource
+from bingqilin.conf.sources import IniSettingsSource
 from bingqilin.db import validate_databases
 from bingqilin.db.models import DBConfig
 from bingqilin.utils.types import AttrKeysDict
@@ -156,7 +156,6 @@ class FastAPIConfig(BaseModel):
 
 
 class ConfigModelConfigDict(SettingsConfigDict, total=False):
-    yaml_files: Optional[Sequence[str]]
     ini_files: Optional[Sequence[str]]
     ini_file_encoding: Optional[str]
 
@@ -259,7 +258,6 @@ class ConfigModel(BaseSettings):
             env_settings,
             dotenv_settings,
             file_secret_settings,
-            YamlSettingsSource(settings_cls),
             IniSettingsSource(settings_cls),
         ) + (cls.add_settings_sources(settings_cls) or tuple())
 

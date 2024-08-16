@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from deprecated import deprecated
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Self, Type, Union
 
@@ -160,6 +161,10 @@ class YamlSettingsSource(BingqilinSettingsSource):
 
         model_config = ConfigDict(title="YamlSourceConfig")
 
+    @deprecated(
+        version="0.6.1",
+        reason="Pydantic settings has support for YAML files as of 2.2.0",
+    )
     def __init__(self, settings_cls: Type[BaseSettings], files=None):
         super().__init__(settings_cls)
         self.files = files or settings_cls.model_config.get("yaml_files") or []
