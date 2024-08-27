@@ -55,7 +55,7 @@ async def log_validation_exception(request: Request, exc: RequestValidationError
     return await request_validation_exception_handler(request, exc)
 
 
-async def reconfigure_handler():
+async def reconfigure_handler() -> dict:
     dispatcher.dispatch_handlers(RECONFIGURE_SIGNAL)
     return {}
 
