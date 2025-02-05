@@ -56,6 +56,15 @@ class SQLAlchemyDBConfig(DBConfig):
     database: Optional[str] = None
     query: Mapping[str, Union[Sequence[str], str]] = {}
 
+    # Connection pool settings
+    max_overflow: int = 10
+    pool_logging_name: Optional[str] = None
+    pool_pre_ping: Optional[bool] = None
+    pool_size: int = 5
+    pool_recycle: int = -1
+    pool_timeout: int = 30
+    pool_use_lifo: bool = False
+
     @model_validator(mode="after")
     def check_required(self):
         if not (self.url or self.engine):
@@ -79,6 +88,21 @@ class SQLAlchemyDBConfig(DBConfig):
             database=self.database,
             query=self.query,
         )
+
+    def to_engine_kwargs(self):
+        kwargs = {
+            "url": self.get_url(),
+            "max_overflow": self.max_overflow,
+            "pool_recycle": self.pool_recycle,
+            "pool_size": self.pool_size,
+            "pool_timeout": self.pool_timeout,
+            "pool_use_lifo": self.pool_use_lifo,
+        }
+        if self.pool_logging_name is not None:
+            kwargs["pool_logging_name"] = self.pool_logging_name
+        if self.pool_pre_ping is not None:
+            kwargs["pool_pre_ping"] = self.pool_pre_ping
+        return kwargs
 
     def initialize_client(self):
         from .sqlalchemy import SQLAlchemyClient
