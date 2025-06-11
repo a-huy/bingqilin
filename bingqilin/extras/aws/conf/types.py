@@ -124,6 +124,7 @@ def SSMParameterField(
     env_var_format: bool = True,
     region: Optional[str] = None,
     account_id: Optional[str] = None,
+    always_fetch: Optional[bool] = None,
     *args,
     **kwargs,
 ):
@@ -137,6 +138,7 @@ def SSMParameterField(
                 "env_var_format": env_var_format,
                 "region": region,
                 "account_id": account_id,
+                "always_fetch": always_fetch,
             }
         },
         *args,
@@ -150,6 +152,7 @@ def SecretsManagerField(
     env_var_format: bool = True,
     region: Optional[str] = None,
     account_id: Optional[str] = None,
+    always_fetch: Optional[bool] = None,
     *args,
     **kwargs,
 ):
@@ -163,6 +166,7 @@ def SecretsManagerField(
                 "env_var_format": env_var_format,
                 "region": region,
                 "account_id": account_id,
+                "always_fetch": always_fetch,
             }
         },
         *args,

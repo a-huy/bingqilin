@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bingqilin"
-version = "0.6.3"
+version = "0.6.4"
 description = "A collection of utilities for building APIs with FastAPI"
 license = "MIT"
 authors = ["Andy <andy@ahn.io>"]

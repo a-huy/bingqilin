@@ -1,5 +1,5 @@
 import json
-from typing import Any, Literal, Optional, Type, Union
+from typing import Any, Dict, Literal, Optional, Type, Union
 
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, ConfigDict
@@ -16,12 +16,16 @@ from bingqilin.extras.aws.conf.types import (
     AWS_SECRETS_MANAGER_SERVICE,
     AWS_SSM_SERVICE,
 )
+from bingqilin.logger import bq_logger
+
+logger = bq_logger.getChild("aws.conf.sources")
 
 
 class BaseAWSSettingsSource(BingqilinSettingsSource):
     type: Literal["aws"]
     package_deps = ["boto3"]
     AWS_SERVICE = None
+    DEFAULT_ALWAYS_FETCH = True
 
     def __init__(
         self,
@@ -29,6 +33,7 @@ class BaseAWSSettingsSource(BingqilinSettingsSource):
         region=None,
         access_key_id=None,
         secret_access_key=None,
+        always_fetch: Optional[bool] = None,
     ):
         super().__init__(settings_cls)
 
@@ -56,6 +61,9 @@ class BaseAWSSettingsSource(BingqilinSettingsSource):
         self.clients_by_region[region] = self.session.client(
             service_name=self.AWS_SERVICE, region_name=region
         )
+        self.always_fetch = (
+            settings_cls.model_config.get("always_fetch") or always_fetch
+        )
 
     def get_region_client(self, region=None):
         if not region:
@@ -65,6 +73,84 @@ class BaseAWSSettingsSource(BingqilinSettingsSource):
                 service_name=self.AWS_SERVICE, region_name=region
             )
         return self.clients_by_region[region]
+
+    def get_aws_extra(self, field_info: FieldInfo) -> Dict:
+        if not field_info.json_schema_extra:
+            return {}
+        aws_extra = field_info.json_schema_extra.get(AWS_FIELD_EXTRA_NAMESPACE) or {}
+        assert isinstance(aws_extra, dict), (
+            f"AWS extra must be a dict, got {type(aws_extra)}"
+        )
+        return aws_extra
+
+    def do_always_fetch(self, field_info: FieldInfo) -> bool:
+        _value = None
+        # The setting on the field takes precedence over the source setting
+        aws_extra = self.get_aws_extra(field_info)
+        if "always_fetch" in aws_extra:
+            _value = aws_extra["always_fetch"]
+
+        # If the setting on the field is not set, use the source setting
+        if _value is None:
+            _value = self.always_fetch
+
+        # If the source setting is not set, use the default value
+        if _value is None:
+            return self.DEFAULT_ALWAYS_FETCH
+
+        assert isinstance(_value, bool)
+        return _value
+
+    def __call__(self) -> dict[str, Any]:
+        values = {}
+
+        def fields_walk(prefixes: list[str], model: type[BaseModel]):
+            for field_name, field_info in model.model_fields.items():
+                current_prefixes = prefixes + [field_name]
+
+                # If the field is a submodel, recurse into it
+                if field_info.annotation and isinstance(
+                    field_info.annotation, type(BaseModel)
+                ):
+                    fields_walk(current_prefixes, field_info.annotation)
+                    continue
+
+                # If this isn't a submodel and the field does not have the proper metadata, skip it
+                aws_extra = self.get_aws_extra(field_info)
+                if aws_extra.get("service") != self.AWS_SERVICE:
+                    continue
+
+                # Check if already set in current_state
+                current = self.current_state
+                try:
+                    for part in prefixes:
+                        current = current.get(part, {})
+                except Exception:
+                    logger.exception(
+                        "An error occurred while attempting to fetch a current value for %s",
+                        field_name,
+                    )
+
+                has_current_value = (
+                    field_name in current
+                    and current[field_name] is not None
+                    and current[field_name] != ""
+                )
+                if has_current_value and not self.do_always_fetch(field_info):
+                    continue
+
+                value, key, is_complex = self.get_field_value(field_info, field_name)
+                if value is not None:
+                    prepared_val = self.prepare_field_value(
+                        key, field_info, value, is_complex
+                    )
+                    cursor = values
+                    for part in current_prefixes[:-1]:
+                        cursor = cursor.setdefault(part, {})
+                    cursor[current_prefixes[-1]] = prepared_val
+
+        fields_walk([], self.settings_cls)
+        return values
 
 
 class AWSSystemsManagerParamsSource(BaseAWSSettingsSource):
@@ -76,6 +162,8 @@ class AWSSystemsManagerParamsSource(BaseAWSSettingsSource):
         region: Optional[str]
         access_key_id: Optional[str]
         secret_access_key: Optional[str]
+        # If False, only attempt to fetch the value if the field is not already set.
+        always_fetch: bool = True
 
         model_config = ConfigDict(title="AWSSSMSourceConfig")
 
@@ -89,6 +177,7 @@ class AWSSystemsManagerParamsSource(BaseAWSSettingsSource):
             return None
 
         param_info = field_info.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
+        assert isinstance(param_info, dict)
 
         if param_info.get("service") != self.AWS_SERVICE:
             return None
@@ -156,6 +245,8 @@ class AWSSecretsManagerSource(BaseAWSSettingsSource):
             return None
 
         aws_extra = field_info.json_schema_extra[AWS_FIELD_EXTRA_NAMESPACE]
+        assert isinstance(aws_extra, dict)
+
         if aws_extra.get("service") != self.AWS_SERVICE:
             return None
 

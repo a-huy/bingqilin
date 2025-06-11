@@ -1,6 +1,5 @@
 import logging
-
-from typing import Any, Optional, Sequence, TypeVar, Union, List, Tuple
+from typing import Any, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from fastapi import FastAPI
 from pydantic import AfterValidator, AnyUrl, BaseModel, Field
