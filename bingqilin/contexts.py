@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Callable, Dict, Generic, Optional, Self, Type, Union, get_origin
 
+from fastapi import FastAPI
 from pydantic import BaseModel
 from pydantic._internal._decorators import ReturnType, is_instance_method_from_sig
 
@@ -389,6 +390,7 @@ class LifespanContext(metaclass=LifespanContextMeta):
     def configure(
         self,
         settings_data: Optional[BaseModel] = None,
+        fastapi_app: Optional[FastAPI] = None,
         raise_on_unconfigured=True,
         **all_field_kwargs,
     ) -> Self:

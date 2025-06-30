@@ -7,7 +7,7 @@ from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 
-from bingqilin.conf.models import ConfigModel, DEFAULT_RECONFIGURE_URL
+from bingqilin.conf.models import DEFAULT_RECONFIGURE_URL, ConfigModel
 from bingqilin.conf.openapi import add_config_model_to_openapi
 from bingqilin.contexts import LifespanContext
 from bingqilin.handlers import add_log_validation_exception_handler
@@ -33,12 +33,12 @@ def contexts_lifespan(
     """
 
     @asynccontextmanager
-    async def lifespan(_: FastAPI):
+    async def lifespan(fastapi_app: FastAPI):
         for ctx in contexts:
             ctx_field_kwargs = {}
             if ctx.name:
                 ctx_field_kwargs = all_ctx_kwargs.get(ctx.name) or {}
-            ctx.configure(settings_data, **ctx_field_kwargs)
+            ctx.configure(settings_data, fastapi_app=fastapi_app, **ctx_field_kwargs)
 
         yield
 

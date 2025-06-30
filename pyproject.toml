@@ -1,26 +1,32 @@
-[tool.poetry]
+[project]
 name = "bingqilin"
-version = "0.6.5"
+version = "0.6.6"
 description = "A collection of utilities for building APIs with FastAPI"
 license = "MIT"
-authors = ["Andy <andy@ahn.io>"]
+authors = [{name = "Andy", email = "andy@ahn.io"}]
 readme = "README.md"
 repository = "https://github.com/a-huy/bingqilin"
 keywords = ["bingqilin", "fastapi"]
 exclude = ["main.py", ".env"]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.95.2,<1.0.0",
+    "pydantic>=2.2.2",
+    "pydantic-settings>=2.0.3",
+    "pyyaml>=6.0.1",
+    "deprecated>=1.2.14",
+]
+
+[project.scripts]
+bingqilin = "bingqilin.management:execute_from_command_line"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
-fastapi = ">=0.95.2,<1.0.0"
-pydantic = "^2.2.2"
-pydantic-settings = ">=2.0.3"
-pyyaml = "^6.0.1"
-deprecated = "^1.2.14"
+python = ">=3.9"
 
-[tool.poetry.extras]
+[project.optional-dependencies]
 management = ["typer"]
 
-[tool.poetry.group.dev.dependencies]
+[project.group.dev.dependencies]
 boto3 = "^1.34.47"
 ipython = "^8.16.1"
 mkdocs-material = "^9.4.5"
@@ -28,9 +34,6 @@ pytest = "^7.4.3"
 redis = {extras = ["hiredis"], version = "^5.0.1"}
 sqlalchemy = "^2.0.21"
 uvicorn = "^0.23.2"
-
-[tool.poetry.scripts]
-bingqilin = "bingqilin.management:execute_from_command_line"
 
 [build-system]
 requires = ["poetry-core"]
