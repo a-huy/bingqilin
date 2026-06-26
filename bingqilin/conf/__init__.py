@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 from bingqilin.logger import bq_logger
 from bingqilin.signal import RECONFIGURE_SIGNAL, signal_handler
+from bingqilin.utils.types import get_class_annotations
 
 from .models import ConfigModel
 
@@ -20,7 +21,7 @@ class SettingsManager:
         self._get_data_annotated_class()
 
     def _get_data_annotated_class(self) -> Type[BaseSettings]:
-        data_class = self.__annotations__.get("data")
+        data_class = get_class_annotations(type(self)).get("data")
         if not data_class:
             raise ValueError("No annotated data attribute defined.")
         if not issubclass(data_class, BaseSettings):

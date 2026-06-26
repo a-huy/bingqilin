@@ -1,6 +1,6 @@
 [project]
 name = "bingqilin"
-version = "0.6.6"
+version = "0.6.7"
 description = "A collection of utilities for building APIs with FastAPI"
 license = "MIT"
 authors = [{name = "Andy", email = "andy@ahn.io"}]
@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/a-huy/bingqilin"
 keywords = ["bingqilin", "fastapi"]
 exclude = ["main.py", ".env"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.95.2,<1.0.0",
     "pydantic>=2.2.2",
@@ -21,7 +21,7 @@ dependencies = [
 bingqilin = "bingqilin.management:execute_from_command_line"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10"
 
 [project.optional-dependencies]
 management = ["typer"]
@@ -31,7 +31,7 @@ boto3 = "^1.34.47"
 ipython = "^8.16.1"
 mkdocs-material = "^9.4.5"
 pytest = "^7.4.3"
-redis = {extras = ["hiredis"], version = "^5.0.1"}
+redis = {extras = ["hiredis"], version = "^8.0.1"}
 sqlalchemy = "^2.0.21"
 uvicorn = "^0.23.2"
 

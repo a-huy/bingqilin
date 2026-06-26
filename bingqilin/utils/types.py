@@ -1,3 +1,4 @@
+import inspect
 from abc import ABCMeta, abstractmethod
 from functools import reduce
 from typing import Any, Callable, Dict, List, MutableMapping, Optional
@@ -10,8 +11,26 @@ from pydantic_core import core_schema
 from typing_extensions import Annotated, get_args
 
 
+def get_class_annotations(cls: type) -> Dict[str, Any]:
+    """Collect annotations for ``cls`` merged across its MRO.
+
+    Annotations are resolved from the class objects rather than an instance.
+    Under PEP 649 (Python 3.14+) ``__annotations__`` is computed lazily via a
+    descriptor on the metaclass and is no longer reachable through an instance
+    (``instance.__annotations__`` raises ``AttributeError``). Using
+    ``inspect.get_annotations`` per class works on every supported Python
+    version, while merging across the MRO resolves inherited annotations with
+    subclasses overriding their bases.
+    """
+    merged: Dict[str, Any] = {}
+    for klass in reversed(cls.__mro__):
+        merged.update(inspect.get_annotations(klass))
+    return merged
+
+
 def get_annotation_literal_value(obj, attr_name):
-    annotations = obj.__annotations__
+    cls = obj if isinstance(obj, type) else type(obj)
+    annotations = get_class_annotations(cls)
     if attr_annotation := annotations.get(attr_name):
         if attr_annotation.__args__:
             return attr_annotation.__args__[0]

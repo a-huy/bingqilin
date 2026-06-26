@@ -13,6 +13,7 @@ from bingqilin.conf.models import ConfigModel
 from bingqilin.db.models import DBConfig, RedisDBConfig, SQLAlchemyDBConfig
 from bingqilin.logger import bq_logger
 from bingqilin.signal import RECONFIGURE_SIGNAL, dispatcher
+from bingqilin.utils.types import get_class_annotations
 
 logger = bq_logger.getChild("contexts")
 
@@ -315,7 +316,7 @@ class LifespanContext(metaclass=LifespanContextMeta):
             result = field_info.initialize_func(init_values)
         elif _f_init := self.__field_initializers__.get(field):
             result = _f_init(init_values)
-        elif annotation := self.__annotations__.get(field):
+        elif annotation := get_class_annotations(type(self)).get(field):
             if not get_origin(annotation):
                 # The origin of the annotated type is an Annotation, Generic, or Union
                 # type. If this check passed, it means that it was annotated with a type
